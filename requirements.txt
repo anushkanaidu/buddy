@@ -1,12 +1,10 @@
-numpy<2.0.0
-chromadb==0.4.24
-langchain
+streamlit
 langchain-google-genai
 langchain-community
 langchain-text-splitters
 langchain-huggingface
+chromadb==0.5.23
 sentence-transformers
-streamlit
 python-dotenv
 langchain-core
-pysqlite3-binary
+numpy==1.26.4
