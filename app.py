@@ -50,7 +50,11 @@ st.title("🤝 Buddy — HR & Compliance Assistant")
 st.caption("Ask me anything about HR policies and onboarding.")
 
 if "chunks" not in st.session_state:
+<<<<<<< HEAD
     with st.spinner("Buddy is loading — takes 30 seconds first time..."):
+=======
+    with st.spinner("Buddy is loading..."):
+>>>>>>> a2294ebea40235f7d42d5f479164ee94010db241
         st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
         st.success("Buddy is ready!")
 
@@ -71,7 +75,7 @@ if query:
             query
         )
         context = "\n".join(top_chunks)
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
         prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
 If you do not know the answer, say so honestly and suggest they reach out to their HR team.
