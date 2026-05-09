@@ -1,6 +1,6 @@
 import os
+import numpy as np
 import streamlit as st
-import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -27,27 +27,31 @@ Mandatory Training: All employees must complete Harassment Policy, AI Ethics, an
 Onboarding Stages: Intake, IT Setup, Orientation, Meet Your Team, Training, First Project, 30-Day Check-in, 90-Day Review.
 """
 
+def cosine_similarity(query_vec, matrix):
+    dots = matrix @ query_vec
+    norms = np.linalg.norm(matrix, axis=1) * np.linalg.norm(query_vec)
+    return dots / (norms + 1e-10)
+
 def build_vector_db(text_data):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = text_splitter.split_text(text_data)
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    embedded_chunks = embeddings.embed_documents(chunks)
-    client = chromadb.EphemeralClient()
-    collection = client.get_or_create_collection("hr_policies")
-    collection.add(
-        documents=chunks,
-        embeddings=embedded_chunks,
-        ids=[str(i) for i in range(len(chunks))]
-    )
-    return collection, embeddings
+    embeddings_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embedded_chunks = np.array(embeddings_model.embed_documents(chunks))
+    return chunks, embedded_chunks, embeddings_model
+
+def query_vector_db(chunks, embeddings_matrix, embeddings_model, query, n_results=3):
+    query_vec = np.array(embeddings_model.embed_query(query))
+    scores = cosine_similarity(query_vec, embeddings_matrix)
+    top_indices = np.argsort(scores)[::-1][:n_results]
+    return [chunks[i] for i in top_indices]
 
 st.set_page_config(page_title="Buddy", page_icon="🤝")
 st.title("🤝 Buddy — HR & Compliance Assistant")
 st.caption("Ask me anything about HR policies and onboarding.")
 
-if "collection" not in st.session_state:
+if "chunks" not in st.session_state:
     with st.spinner("Buddy is loading — takes 30 seconds first time..."):
-        st.session_state.collection, st.session_state.embeddings = build_vector_db(hr_docs)
+        st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
         st.success("Buddy is ready!")
 
 with st.sidebar:
@@ -60,12 +64,13 @@ query = st.text_input("Ask Buddy something:")
 
 if query:
     with st.spinner("Buddy is thinking..."):
-        query_embedding = st.session_state.embeddings.embed_query(query)
-        results = st.session_state.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=3
+        top_chunks = query_vector_db(
+            st.session_state.chunks,
+            st.session_state.embeddings_matrix,
+            st.session_state.embeddings_model,
+            query
         )
-        context = "\n".join(results["documents"][0])
+        context = "\n".join(top_chunks)
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
         prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
