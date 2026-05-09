@@ -27,6 +27,13 @@ Mandatory Training: All employees must complete Harassment Policy, AI Ethics, an
 Onboarding Stages: Intake, IT Setup, Orientation, Meet Your Team, Training, First Project, 30-Day Check-in, 90-Day Review.
 """
 
+employees_stats = [
+    {"name": "Anushka Naidu", "role": "UX Strategist", "progress": 20, "status": "At Risk"},
+    {"name": "Marcus Lee", "role": "Copywriter", "progress": 60, "status": "On Track"},
+    {"name": "Priya Sharma", "role": "Account Manager", "progress": 40, "status": "On Track"},
+    {"name": "Jordan Kim", "role": "Designer", "progress": 85, "status": "Overdue"}
+]
+
 def cosine_similarity(query_vec, matrix):
     dots = matrix @ query_vec
     norms = np.linalg.norm(matrix, axis=1) * np.linalg.norm(query_vec)
@@ -46,33 +53,51 @@ def query_vector_db(chunks, embeddings_matrix, embeddings_model, query, n_result
     return [chunks[i] for i in top_indices]
 
 st.set_page_config(page_title="Buddy", page_icon="🤝")
-st.title("🤝 Buddy — HR & Compliance Assistant")
-st.caption("Ask me anything about HR policies and onboarding.")
-
-if "chunks" not in st.session_state:
-    with st.spinner("Buddy is loading..."):
-        st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
-        st.success("Buddy is ready!")
 
 with st.sidebar:
     st.header("Logged in as")
     st.info("Anushka Naidu - Data Science Student - Day 1 of onboarding")
     st.progress(20, text="Onboarding: 20% complete")
     st.warning("Still to complete: AI Ethics Training, Tool Onboarding, First Project")
+    st.divider()
+    view_mode = st.radio("Switch View:", ["Employee Portal", "HR Manager View"])
 
-query = st.text_input("Ask Buddy something:")
+if view_mode == "HR Manager View":
+    st.title("📈 Manager Insights")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Onboarding Avg", "51%")
+    col2.metric("At Risk", "1")
+    col3.metric("Overdue Tasks", "4")
+    st.subheader("Employee Progress")
+    for emp in employees_stats:
+        with st.expander(f"{emp['name']} — {emp['role']}"):
+            c1, c2 = st.columns([3, 1])
+            c1.progress(emp['progress'])
+            if emp['status'] in ["At Risk", "Overdue"]:
+                if c2.button(f"Nudge {emp['name'].split()[0]}", key=emp['name']):
+                    st.toast(f"Nudge sent to {emp['name']}!", icon="👋")
+            else:
+                c2.success(emp['status'])
 
-if query:
-    with st.spinner("Buddy is thinking..."):
-        top_chunks = query_vector_db(
-            st.session_state.chunks,
-            st.session_state.embeddings_matrix,
-            st.session_state.embeddings_model,
-            query
-        )
-        context = "\n".join(top_chunks)
-        llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
-        prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
+else:
+    st.title("🤝 Buddy — HR & Compliance Assistant")
+    st.caption("Ask me anything about HR policies and onboarding.")
+    if "chunks" not in st.session_state:
+        with st.spinner("Buddy is loading..."):
+            st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
+            st.success("Buddy is ready!")
+    query = st.text_input("Ask Buddy something:")
+    if query:
+        with st.spinner("Buddy is thinking..."):
+            top_chunks = query_vector_db(
+                st.session_state.chunks,
+                st.session_state.embeddings_matrix,
+                st.session_state.embeddings_model,
+                query
+            )
+            context = "\n".join(top_chunks)
+            llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
+            prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
 If you do not know the answer, say so honestly and suggest they reach out to their HR team.
 Be friendly and specific like a helpful colleague not a robot.
@@ -83,6 +108,6 @@ HR Context:
 Employee Question: {query}
 
 Buddy Response:"""
-        response = llm.invoke([HumanMessage(content=prompt)])
-        st.markdown("### Buddy says:")
-        st.write(response.content)
+            response = llm.invoke([HumanMessage(content=prompt)])
+            st.markdown("### Buddy says:")
+            st.write(response.content)
