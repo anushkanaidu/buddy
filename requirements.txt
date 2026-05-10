@@ -1,5 +1,5 @@
 streamlit
-langchain-google-genai
+groq
 langchain-text-splitters
 langchain-huggingface
 sentence-transformers
