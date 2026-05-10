@@ -3,11 +3,7 @@ import numpy as np
 import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage
-from dotenv import load_dotenv
-
-load_dotenv()
+from groq import Groq
 
 hr_docs = """
 EMPLOYEE HANDBOOK
@@ -54,6 +50,12 @@ def query_vector_db(chunks, embeddings_matrix, embeddings_model, query, n_result
 
 st.set_page_config(page_title="Buddy", page_icon="🤝")
 
+if "GROQ_API_KEY" not in st.secrets:
+    st.error("Add GROQ_API_KEY to Streamlit Secrets!")
+    st.stop()
+
+api_key = st.secrets["GROQ_API_KEY"]
+
 with st.sidebar:
     st.header("Logged in as")
     st.info("Anushka Naidu - Data Science Student - Day 1 of onboarding")
@@ -96,7 +98,7 @@ else:
                 query
             )
             context = "\n".join(top_chunks)
-            llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
+            client = Groq(api_key=api_key)
             prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
 If you do not know the answer, say so honestly and suggest they reach out to their HR team.
@@ -108,6 +110,9 @@ HR Context:
 Employee Question: {query}
 
 Buddy Response:"""
-            response = llm.invoke([HumanMessage(content=prompt)])
+            response = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[{"role": "user", "content": prompt}]
+            )
             st.markdown("### Buddy says:")
-            st.write(response.content)
+            st.write(response.choices[0].message.content)

@@ -3,5 +3,4 @@ groq
 langchain-text-splitters
 langchain-huggingface
 sentence-transformers
-python-dotenv
 numpy
