@@ -4,6 +4,6 @@ langchain-text-splitters
 langchain-huggingface
 sentence-transformers
 python-dotenv
-langchain-core==0.3.45
+langchain-core==0.3.75
 langsmith==0.1.125
 numpy
