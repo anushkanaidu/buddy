@@ -424,7 +424,9 @@ with st.sidebar:
 
     st.markdown('<div style="padding:0 16px;">', unsafe_allow_html=True)
     st.markdown('<div style="font-size:8px;color:#333;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Signal</div>', unsafe_allow_html=True)
-    mood_pick = st.radio("", list(MOODS.keys()), index=list(MOODS.keys()).index(st.session_state.mood),
+    mood_keys = list(MOODS.keys())
+    mood_idx = mood_keys.index(st.session_state.mood) if st.session_state.mood in mood_keys else 1
+    mood_pick = st.radio("", mood_keys, index=mood_idx,
                          horizontal=True, label_visibility="collapsed")
     if mood_pick != st.session_state.mood:
         st.session_state.mood = mood_pick
