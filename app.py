@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -6,187 +5,167 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from groq import Groq
 
 st.set_page_config(
-    page_title="Buddy — HR Assistant",
-    page_icon="🤝",
+    page_title="Buddy — HR Control Tower",
+    page_icon="⬡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    --cream: #FAF7F2;
+    --obsidian: #050505;
+    --obsidian-2: #0A0A0A;
+    --obsidian-3: #111111;
+    --obsidian-4: #161616;
+    --obsidian-5: #1E1E1E;
+    --border: #1A1A1A;
+    --border-2: #242424;
+    --crimson: #E11D48;
+    --crimson-dim: rgba(225,29,72,0.08);
+    --crimson-border: rgba(225,29,72,0.2);
+    --slate: #94A3B8;
+    --slate-dim: #64748B;
     --white: #FFFFFF;
-    --sage: #6B8F71;
-    --sage-light: #E8F0E9;
-    --sage-mid: #A8C5AD;
-    --amber: #C17D0E;
-    --amber-light: #FEF3E2;
-    --rose: #B85460;
-    --rose-light: #FDEAEC;
-    --charcoal: #2C2C2C;
-    --mid: #6B6B6B;
-    --border: #E8E4DF;
-    --shadow: 0 2px 12px rgba(44,44,44,0.07);
-    --shadow-hover: 0 6px 24px rgba(44,44,44,0.13);
+    --white-90: rgba(255,255,255,0.9);
+    --white-60: rgba(255,255,255,0.6);
+    --white-20: rgba(255,255,255,0.2);
+    --white-10: rgba(255,255,255,0.1);
+    --white-05: rgba(255,255,255,0.05);
+    --green: #10B981;
+    --green-dim: rgba(16,185,129,0.08);
+    --amber: #F59E0B;
+    --amber-dim: rgba(245,158,11,0.08);
+    --glass: rgba(255,255,255,0.03);
+    --glass-border: rgba(255,255,255,0.06);
 }
 
 html, body, [data-testid="stApp"] {
-    background-color: var(--cream) !important;
-    font-family: 'DM Sans', sans-serif !important;
-    color: var(--charcoal) !important;
+    background: var(--obsidian) !important;
+    font-family: 'Inter', sans-serif !important;
+    color: var(--white) !important;
 }
+
+#MainMenu, footer, header, [data-testid="stToolbar"],
+[data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+.main .block-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* ── SIDEBAR ── */
 [data-testid="stSidebar"] {
-    background-color: var(--white) !important;
+    background: var(--obsidian-2) !important;
     border-right: 1px solid var(--border) !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
 }
 [data-testid="stSidebar"] > div { padding: 0 !important; }
-#MainMenu, footer, header, [data-testid="stToolbar"] { display: none !important; }
-.main .block-container { padding: 2rem 2.5rem !important; max-width: 960px !important; }
 
-h1,h2,h3 { font-family: 'DM Serif Display', serif !important; }
-
-/* Greeting */
-.greeting-card {
-    background: linear-gradient(135deg, #E8F0E9 0%, #F5EFE6 100%);
-    border-radius: 20px; padding: 1.75rem 2rem; margin-bottom: 1.5rem;
-    border: 1px solid var(--sage-mid); position: relative; overflow: hidden;
-}
-.greeting-card::after {
-    content: '🌿'; position: absolute; right: 1.5rem; top: 1rem;
-    font-size: 3rem; opacity: 0.2;
-}
-.greet-name { font-family: 'DM Serif Display',serif; font-size: 1.65rem; margin: 0 0 0.25rem; color: var(--charcoal); }
-.greet-day { font-size: 0.82rem; color: var(--mid); margin: 0 0 1rem; }
-.greet-nudge {
-    background: white; border-radius: 10px; padding: 0.75rem 1rem;
-    font-size: 0.875rem; color: var(--charcoal); border-left: 3px solid var(--sage);
-    line-height: 1.55;
+/* ── SELECTBOX ── */
+[data-testid="stSelectbox"] > div > div {
+    background: var(--obsidian-4) !important;
+    border: 1px solid var(--border-2) !important;
+    border-radius: 6px !important;
+    color: var(--white) !important;
+    font-size: 12px !important;
 }
 
-/* Chat bubbles */
-.chat-user {
-    background: var(--sage); color: white;
-    border-radius: 18px 18px 4px 18px; padding: 0.875rem 1.25rem;
-    margin: 0.5rem 0 0.5rem 18%; font-size: 0.9rem; line-height: 1.5;
-}
-.chat-buddy {
-    background: var(--white); color: var(--charcoal);
-    border-radius: 18px 18px 18px 4px; padding: 1rem 1.25rem;
-    margin: 0.5rem 18% 0.5rem 0; font-size: 0.9rem; line-height: 1.6;
-    box-shadow: var(--shadow); border: 1px solid var(--border);
-}
-.buddy-label {
-    font-size: 0.72rem; font-weight: 600; color: var(--sage);
-    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.35rem;
-}
-.source-tag {
-    display: inline-block; background: var(--sage-light); color: var(--sage);
-    border-radius: 6px; padding: 0.15rem 0.5rem; font-size: 0.7rem;
-    font-weight: 500; margin-top: 0.5rem; margin-right: 0.3rem;
-}
-
-/* Input */
+/* ── TEXT INPUT ── */
 [data-testid="stTextInput"] input {
-    border-radius: 12px !important; border: 2px solid var(--border) !important;
-    padding: 0.75rem 1rem !important; font-family: 'DM Sans',sans-serif !important;
-    font-size: 0.95rem !important; background: var(--white) !important;
-    transition: border-color 0.2s !important;
+    background: var(--obsidian-4) !important;
+    border: 1px solid var(--border-2) !important;
+    border-radius: 6px !important;
+    color: var(--white) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+    caret-color: var(--crimson) !important;
 }
 [data-testid="stTextInput"] input:focus {
-    border-color: var(--sage) !important;
-    box-shadow: 0 0 0 3px rgba(107,143,113,0.12) !important;
+    border-color: var(--crimson) !important;
+    box-shadow: 0 0 0 2px rgba(225,29,72,0.12) !important;
+}
+[data-testid="stTextInput"] input::placeholder { color: var(--slate-dim) !important; }
+
+/* ── BUTTONS ── */
+[data-testid="stButton"] button {
+    background: var(--obsidian-4) !important;
+    border: 1px solid var(--border-2) !important;
+    color: var(--slate) !important;
+    border-radius: 6px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.02em !important;
+    transition: all 0.15s ease !important;
+}
+[data-testid="stButton"] button:hover {
+    border-color: var(--border-2) !important;
+    color: var(--white) !important;
+    background: var(--obsidian-5) !important;
 }
 
-/* Progress */
-[data-testid="stProgress"] > div > div {
-    background: linear-gradient(90deg, var(--sage), var(--sage-mid)) !important;
+/* ── PROGRESS ── */
+[data-testid="stProgress"] > div {
+    background: var(--obsidian-5) !important;
+    height: 3px !important;
     border-radius: 99px !important;
 }
-[data-testid="stProgress"] > div {
-    background: var(--border) !important; border-radius: 99px !important; height: 7px !important;
+[data-testid="stProgress"] > div > div {
+    background: var(--crimson) !important;
+    border-radius: 99px !important;
 }
 
-/* Sidebar */
-.sb-logo { padding: 1.5rem 1.25rem 0.75rem; }
-.sb-logo-name { font-family: 'DM Serif Display',serif; font-size: 1.15rem; color: var(--sage); }
-.sb-logo-sub { font-size: 0.68rem; color: var(--mid); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 1px; }
-.sb-divider { border: none; border-top: 1px solid var(--border); margin: 0.25rem 0; }
-.sb-section { padding: 1rem 1.25rem; }
-.sb-label { font-size: 0.7rem; font-weight: 600; color: var(--mid); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
-.avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600; margin-bottom: 0.6rem; }
-.profile-name { font-weight: 600; font-size: 0.9rem; color: var(--charcoal); margin: 0; }
-.profile-role { font-size: 0.76rem; color: var(--mid); margin: 0.1rem 0 0; }
-.badge { display: inline-block; padding: 0.18rem 0.6rem; border-radius: 99px; font-size: 0.72rem; font-weight: 600; }
-.badge-on { background: var(--sage-light); color: var(--sage); }
-.badge-risk { background: var(--amber-light); color: var(--amber); }
-.badge-over { background: var(--rose-light); color: var(--rose); }
-.todo-item { display: flex; align-items: center; gap: 6px; padding: 0.38rem 0; font-size: 0.82rem; color: var(--charcoal); border-bottom: 1px solid var(--border); }
-.todo-item:last-child { border-bottom: none; }
-.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-
-/* Metric cards */
-.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; margin-bottom: 1.75rem; }
-.metric-card {
-    background: var(--white); border-radius: 14px; padding: 1.25rem 1.5rem;
-    border: 1px solid var(--border); box-shadow: var(--shadow); text-align: center;
-}
-.metric-num { font-family: 'DM Serif Display',serif; font-size: 2.1rem; color: var(--charcoal); line-height: 1; margin: 0; }
-.metric-lbl { font-size: 0.72rem; color: var(--mid); margin-top: 0.35rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-
-/* Employee rows */
-.emp-row {
-    background: var(--white); border-radius: 14px; padding: 1rem 1.25rem;
-    margin-bottom: 0.65rem; border: 1px solid var(--border); box-shadow: var(--shadow);
-    display: flex; align-items: center; gap: 1rem;
-}
-.emp-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 600; flex-shrink: 0; }
-.emp-info { flex: 1; min-width: 0; }
-.emp-name { font-weight: 600; font-size: 0.9rem; color: var(--charcoal); margin: 0; }
-.emp-meta { font-size: 0.75rem; color: var(--mid); margin: 0.1rem 0 0; }
-.emp-bar { flex: 1.2; }
-.emp-bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 3px; }
-.emp-bar-fill { height: 100%; border-radius: 99px; }
-.emp-pct { font-size: 0.72rem; color: var(--mid); }
-.emp-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
-
-/* Heatmap */
-.heatmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; }
-.heatmap-card {
-    background: var(--white); border-radius: 12px; padding: 1rem 1.1rem;
-    border: 1px solid var(--border);
-}
-.heatmap-dept { font-weight: 600; font-size: 0.85rem; color: var(--charcoal); margin-bottom: 0.4rem; }
-.heatmap-bar-track { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 0.35rem; }
-.heatmap-bar-fill { height: 100%; border-radius: 99px; }
-.heatmap-pct { font-size: 0.75rem; color: var(--mid); }
-
-/* Section headers */
-.section-title { font-family: 'DM Serif Display',serif; font-size: 1.3rem; color: var(--charcoal); margin: 0 0 0.75rem; }
-.section-sub { font-size: 0.83rem; color: var(--mid); margin: -0.5rem 0 1.25rem; }
-
-/* Suggestions */
-.suggestion-chip {
-    display: inline-block; background: var(--white); border: 1px solid var(--border);
-    border-radius: 99px; padding: 0.35rem 0.9rem; font-size: 0.8rem; color: var(--mid);
-    margin: 0 0.35rem 0.5rem 0; cursor: pointer;
+/* ── CHECKBOX ── */
+[data-testid="stCheckbox"] label {
+    color: var(--slate) !important;
+    font-size: 11px !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
-/* Selectbox */
-[data-testid="stSelectbox"] > div > div {
-    border-radius: 10px !important; border: 2px solid var(--border) !important;
-    background: var(--cream) !important;
+/* ── RADIO ── */
+[data-testid="stRadio"] label {
+    color: var(--slate) !important;
+    font-size: 11px !important;
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+/* ── EXPANDER ── */
+[data-testid="stExpander"] {
+    background: var(--glass) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stExpander"] summary {
+    color: var(--slate-dim) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
+
+/* ── DIVIDER ── */
+hr { border-color: var(--border) !important; margin: 6px 0 !important; }
+
+/* ── TOAST ── */
+[data-testid="stToast"] {
+    background: var(--obsidian-3) !important;
+    border: 1px solid var(--border-2) !important;
+    color: var(--white) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ── DATA ──────────────────────────────────────────────────────────
-hr_docs = """
+# ── DATA ─────────────────────────────────────────────────────────────────────
+HR_DOCS = """
 EMPLOYEE HANDBOOK
 
 PTO Policy: Employees receive 20 days of Paid Time Off per year. Requests must be submitted via the HR Portal at least 5 business days in advance.
@@ -204,55 +183,57 @@ Mandatory Training (first 14 days):
 
 1-on-1s: Weekly check-ins every Friday with your direct manager. First 1-on-1 should happen within the first 3 days.
 
-Onboarding Stages:
-- Day 1-3: Intake and IT Setup (laptop, accounts, badges)
-- Day 4-7: Orientation (team intros, culture, values)
-- Day 8-14: Tool Training (Slack, Asana, Figma, Gemini)
-- Day 15-30: First Project (shadow team, take ownership of a small task)
-- Day 30: 30-Day Check-in with manager
-- Day 90: 90-Day Review with HR
+Onboarding Stages: Day 1-3 Intake and IT Setup. Day 4-7 Orientation. Day 8-14 Tool Training. Day 15-30 First Project. Day 30 Check-in. Day 90 Review.
 
-Leave Policy: Sick leave is separate from PTO — 10 days per year. Parental leave is 16 weeks fully paid. Bereavement leave is 5 days.
+Leave Policy: Sick leave is 10 days per year separate from PTO. Parental leave is 16 weeks fully paid. Bereavement leave is 5 days.
 
 Performance Reviews: Twice yearly in June and December. Self-assessments due 2 weeks before review.
 
-Expense Policy: Submit within 30 days of expense. Meals up to $75 per person. Travel booked via Concur.
+Expense Policy: Submit within 30 days. Meals up to $75 per person. Travel booked via Concur.
 
-Compliance Requirements: All employees must complete Harassment Policy, AI Ethics, and Tool Onboarding within the first 14 days. Failure to complete within 30 days triggers an HR flag.
+Compliance: All employees must complete Harassment Policy, AI Ethics, and Tool Onboarding within the first 14 days. Failure triggers an HR flag after 30 days.
 """
 
 EMPLOYEES = {
     "Anushka Naidu": {
         "role": "UX Strategist", "day": 5, "stage": "Tool Training",
-        "progress": 20, "status": "At Risk", "initials": "AN", "color": "#6B8F71",
+        "progress": 20, "status": "At Risk", "initials": "AN",
+        "region": "US", "bgv": "Cleared",
         "todos": ["AI Ethics Training", "Asana Onboarding", "First Project kickoff"],
         "done": ["Laptop setup", "Slack access", "Team intro meeting"],
-        "greeting": "You're on Day 5 — right in the middle of Tool Training. Let's make sure you're set up on Asana and Figma before the week's out. Your AI Ethics training is also due in 9 days!",
-        "dept": "Design"
+        "greeting": "You're on Day 5. AI Ethics is due in 9 days — let's close that gap.",
+        "next_milestone": "AI Ethics Training", "days_to_milestone": 9,
+        "dept": "Design",
     },
     "Marcus Lee": {
         "role": "Copywriter", "day": 12, "stage": "Tool Training",
-        "progress": 60, "status": "On Track", "initials": "ML", "color": "#7B6FA0",
+        "progress": 60, "status": "On Track", "initials": "ML",
+        "region": "UK", "bgv": "Cleared",
         "todos": ["Gemini 101 training", "30-day check-in prep"],
         "done": ["Harassment Policy", "AI Ethics", "Slack & Asana", "First brief"],
-        "greeting": "Day 12 and you're looking great! Just two items left before your 30-day check-in. You've knocked out all the mandatory training — that's a big deal.",
-        "dept": "Marketing"
+        "greeting": "Day 12 — strong progress. Two items to close before your 30-day check-in.",
+        "next_milestone": "30-Day Check-in", "days_to_milestone": 18,
+        "dept": "Marketing",
     },
     "Priya Sharma": {
         "role": "Account Manager", "day": 3, "stage": "Orientation",
-        "progress": 40, "status": "On Track", "initials": "PS", "color": "#C0616B",
-        "todos": ["Meet the client team", "Complete Harassment Policy", "IT setup finalisation"],
+        "progress": 40, "status": "On Track", "initials": "PS",
+        "region": "IN", "bgv": "Cleared",
+        "todos": ["Meet the client team", "Complete Harassment Policy", "IT setup"],
         "done": ["Laptop & badge", "Day 1 welcome session"],
-        "greeting": "Welcome to Day 3, Priya! You're right on schedule. Your next milestone is meeting the client team and finishing IT setup — both should happen this week.",
-        "dept": "Sales"
+        "greeting": "Welcome to Day 3, Priya. Orientation week — meeting the client team is next.",
+        "next_milestone": "Harassment Policy", "days_to_milestone": 11,
+        "dept": "Sales",
     },
     "Jordan Kim": {
         "role": "Designer", "day": 18, "stage": "30-Day Check-in",
-        "progress": 85, "status": "Overdue", "initials": "JK", "color": "#D4820A",
-        "todos": ["Schedule 30-day check-in with manager"],
+        "progress": 85, "status": "Overdue", "initials": "JK",
+        "region": "US", "bgv": "Cleared",
+        "todos": ["Schedule 30-day check-in"],
         "done": ["All mandatory training", "First project delivered", "Tool onboarding"],
-        "greeting": "Almost there, Jordan! You've completed everything except one thing — your 30-day check-in still hasn't been scheduled. Reach out to your manager today to lock it in.",
-        "dept": "Design"
+        "greeting": "One item remaining, Jordan. Schedule that check-in today.",
+        "next_milestone": "30-Day Check-in", "days_to_milestone": -2,
+        "dept": "Design",
     },
 }
 
@@ -265,376 +246,562 @@ DEPT_COMPLIANCE = {
     "Finance": {"pct": 96, "employees": 9, "flagged": 0},
 }
 
-def heatmap_color(pct):
-    if pct >= 85: return "#6B8F71"
-    if pct >= 60: return "#D4820A"
-    return "#C0616B"
+STAGES = ["Intake", "IT Setup", "Orientation", "Tool Training", "First Project", "30-Day", "BGV", "Offboard", "Exit"]
 
-def cosine_similarity(query_vec, matrix):
-    dots = matrix @ query_vec
-    norms = np.linalg.norm(matrix, axis=1) * np.linalg.norm(query_vec)
+MOODS = {
+    "🌟": {"label": "energised", "gradient": "radial-gradient(ellipse at top left, rgba(16,185,129,0.04) 0%, transparent 60%)"},
+    "😊": {"label": "good", "gradient": "radial-gradient(ellipse at top left, rgba(99,102,241,0.04) 0%, transparent 60%)"},
+    "😐": {"label": "okay", "gradient": "radial-gradient(ellipse at top left, rgba(245,158,11,0.04) 0%, transparent 60%)"},
+    "😔": {"label": "drained", "gradient": "radial-gradient(ellipse at top left, rgba(100,116,139,0.06) 0%, transparent 60%)"},
+}
+
+def status_colors(s):
+    return {
+        "On Track":  ("#10B981", "rgba(16,185,129,0.08)",  "rgba(16,185,129,0.2)"),
+        "At Risk":   ("#E11D48", "rgba(225,29,72,0.08)",   "rgba(225,29,72,0.2)"),
+        "Overdue":   ("#F59E0B", "rgba(245,158,11,0.08)",  "rgba(245,158,11,0.2)"),
+    }.get(s, ("#94A3B8", "rgba(148,163,184,0.08)", "rgba(148,163,184,0.2)"))
+
+def cosine_sim(qv, matrix):
+    dots = matrix @ qv
+    norms = np.linalg.norm(matrix, axis=1) * np.linalg.norm(qv)
     return dots / (norms + 1e-10)
 
-def build_vector_db(text_data):
+def build_db(text):
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = splitter.split_text(text_data)
+    chunks = splitter.split_text(text)
     model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     vecs = np.array(model.embed_documents(chunks))
     return chunks, vecs, model
 
 def query_db(chunks, matrix, model, query, n=3):
     qv = np.array(model.embed_query(query))
-    scores = cosine_similarity(qv, matrix)
+    scores = cosine_sim(qv, matrix)
     top = np.argsort(scores)[::-1][:n]
-    return [chunks[i] for i in top], [round(float(scores[i]), 2) for i in top]
+    return [chunks[i] for i in top], [round(float(scores[i]), 3) for i in top]
 
-# ── INIT ──────────────────────────────────────────────────────────
-if "chunks" not in st.session_state:
-    with st.spinner("Buddy is waking up…"):
-        st.session_state.chunks, st.session_state.vecs, st.session_state.model = build_vector_db(hr_docs)
+# ── SESSION STATE ─────────────────────────────────────────────────────────────
+for k, v in [
+    ("chunks", None), ("history", []), ("user", "Anushka Naidu"),
+    ("mood", "😊"), ("completed", None), ("celebrate", False),
+    ("active_source", None), ("view", "Employee"),
+]:
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-if "history" not in st.session_state:
-    st.session_state.history = []
+if st.session_state.completed is None:
+    st.session_state.completed = {n: [] for n in EMPLOYEES}
 
-if "user" not in st.session_state:
-    st.session_state.user = "Anushka Naidu"
+if st.session_state.chunks is None:
+    with st.spinner(""):
+        c, v, m = build_db(HR_DOCS)
+        st.session_state.chunks = c
+        st.session_state.vecs = v
+        st.session_state.model_emb = m
 
 if "GROQ_API_KEY" not in st.secrets:
     st.error("Add GROQ_API_KEY to Streamlit Secrets.")
     st.stop()
 
 api_key = st.secrets["GROQ_API_KEY"]
+emp = EMPLOYEES[st.session_state.user]
+sc, sc_bg, sc_border = status_colors(emp["status"])
+mood_gradient = MOODS.get(st.session_state.mood, MOODS["😊"])["gradient"]
 
-# Track completed tasks per user + celebration flag
-if "completed_tasks" not in st.session_state:
-    st.session_state.completed_tasks = {name: [] for name in EMPLOYEES}
-if "celebrate" not in st.session_state:
-    st.session_state.celebrate = False
-
-# ── SIDEBAR ───────────────────────────────────────────────────────
+# ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div class="sb-logo">
-        <div class="sb-logo-name">🤝 Buddy</div>
-        <div class="sb-logo-sub">HR & Compliance Assistant</div>
+    st.markdown(f"""
+    <div style="padding:20px 18px 14px;">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:600;
+                    color:#fff;letter-spacing:-0.3px;">Buddy</div>
+        <div style="font-size:8.5px;color:#333;text-transform:uppercase;
+                    letter-spacing:0.14em;margin-top:2px;">HR Control Tower</div>
     </div>
-    <hr class="sb-divider">
+    <div style="height:1px;background:#1A1A1A;margin:0 0 2px;"></div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="sb-section">', unsafe_allow_html=True)
-    st.markdown('<div class="sb-label">Logged in as</div>', unsafe_allow_html=True)
-
+    st.markdown('<div style="padding:12px 16px 6px;">', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:8px;font-weight:600;color:#333;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:6px;">Operator</div>', unsafe_allow_html=True)
     selected = st.selectbox("", list(EMPLOYEES.keys()),
                             index=list(EMPLOYEES.keys()).index(st.session_state.user),
                             label_visibility="collapsed")
     if selected != st.session_state.user:
         st.session_state.user = selected
         st.session_state.history = []
+        st.session_state.active_source = None
+        emp = EMPLOYEES[selected]
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     emp = EMPLOYEES[st.session_state.user]
-    badge_map = {"On Track": "badge-on", "At Risk": "badge-risk", "Overdue": "badge-over"}
+    sc, sc_bg, sc_border = status_colors(emp["status"])
+    user_done = st.session_state.completed[st.session_state.user]
+    total_t = len(emp["todos"]) + len(emp["done"])
+    done_t = len(emp["done"]) + len([t for t in user_done if t in emp["todos"]])
+    live_pct = int((done_t / total_t) * 100) if total_t else emp["progress"]
 
     st.markdown(f"""
-    <div class="avatar" style="background:{emp['color']}22;color:{emp['color']};">{emp['initials']}</div>
-    <p class="profile-name">{st.session_state.user}</p>
-    <p class="profile-role">{emp['role']} · Day {emp['day']}</p>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div style="margin:0.6rem 0 0.25rem;"></div>', unsafe_allow_html=True)
-    user_completed_preview = st.session_state.completed_tasks.get(st.session_state.user, [])
-    total_tasks_preview = len(emp['todos']) + len(emp['done'])
-    tasks_done_preview = len(emp['done']) + len(user_completed_preview)
-    display_progress = int((tasks_done_preview / total_tasks_preview) * 100) if total_tasks_preview > 0 else emp['progress']
-    st.progress(display_progress / 100)
-    st.markdown(f'<p style="font-size:0.72rem;color:var(--mid);margin-top:0.2rem;">{display_progress}% · {emp["stage"]}</p>', unsafe_allow_html=True)
-    st.markdown(f'<span class="badge {badge_map[emp["status"]]}" style="margin-top:0.4rem;display:inline-block;">{emp["status"]}</span>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
-    st.markdown('<div class="sb-section">', unsafe_allow_html=True)
-    st.markdown('<div class="sb-label">Live Tasks</div>', unsafe_allow_html=True)
-
-    user_completed = st.session_state.completed_tasks[st.session_state.user]
-    all_todos = emp['todos']
-    newly_checked = None
-
-    for task in all_todos:
-        already_done = task in user_completed
-        checked = st.checkbox(task, value=already_done, key=f"task_{st.session_state.user}_{task}")
-        if checked and not already_done:
-            newly_checked = task
-            user_completed.append(task)
-
-    if newly_checked:
-        st.session_state.celebrate = newly_checked
-        st.session_state.history.append({
-            "role": "assistant",
-            "content": f"🎉 You just completed **{newly_checked}**! That's a big deal — your progress is growing. Keep going, you're doing great!",
-            "sources": []
-        })
-        st.rerun()
-
-    remaining = [t for t in all_todos if t not in user_completed]
-    total_tasks = len(all_todos) + len(emp['done'])
-    tasks_done = len(emp['done']) + len(user_completed)
-    live_progress = int((tasks_done / total_tasks) * 100) if total_tasks > 0 else emp['progress']
-
-    if emp['done']:
-        st.markdown('<div class="sb-label" style="margin-top:0.75rem;">Done ✓</div>', unsafe_allow_html=True)
-        for item in emp['done']:
-            st.markdown(f'<div class="todo-item"><div class="dot" style="background:#6B8F71;"></div><span style="color:var(--mid);">{item}</span></div>', unsafe_allow_html=True)
-        for item in user_completed:
-            if item not in emp['done']:
-                st.markdown(f'<div class="todo-item"><div class="dot" style="background:#6B8F71;"></div><span style="color:var(--mid);">{item}</span></div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<hr class="sb-divider">', unsafe_allow_html=True)
-    st.markdown('<div style="padding:0.75rem 1.25rem 1.5rem;">', unsafe_allow_html=True)
-    view = st.radio("View", ["Employee Portal", "HR Manager View"], label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ── MAIN ──────────────────────────────────────────────────────────
-if view == "HR Manager View":
-    st.markdown('<p class="section-title">Manager Overview</p>', unsafe_allow_html=True)
-    st.markdown('<p class="section-sub">Compliance and onboarding status across your team</p>', unsafe_allow_html=True)
-
-    on_track = sum(1 for e in EMPLOYEES.values() if e['status'] == 'On Track')
-    at_risk  = sum(1 for e in EMPLOYEES.values() if e['status'] == 'At Risk')
-    overdue  = sum(1 for e in EMPLOYEES.values() if e['status'] == 'Overdue')
-    avg_prog = int(sum(e['progress'] for e in EMPLOYEES.values()) / len(EMPLOYEES))
-
-    st.markdown(f"""
-    <div class="metric-grid">
-        <div class="metric-card"><p class="metric-num">{len(EMPLOYEES)}</p><p class="metric-lbl">Total Employees</p></div>
-        <div class="metric-card"><p class="metric-num">{avg_prog}%</p><p class="metric-lbl">Avg Progress</p></div>
-        <div class="metric-card" style="border-color:#FDEAEC;"><p class="metric-num" style="color:#B85460;">{at_risk + overdue}</p><p class="metric-lbl">Needs Attention</p></div>
-        <div class="metric-card" style="border-color:#E8F0E9;"><p class="metric-num" style="color:#6B8F71;">{on_track}</p><p class="metric-lbl">On Track</p></div>
+    <div style="margin:0 12px 10px;background:var(--glass);border:1px solid var(--glass-border);
+                border-radius:10px;padding:14px;backdrop-filter:blur(8px);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:{sc_bg};
+                        border:1px solid {sc_border};display:flex;align-items:center;
+                        justify-content:center;font-size:11px;font-weight:700;color:{sc};
+                        font-family:'JetBrains Mono',monospace;flex-shrink:0;">{emp['initials']}</div>
+            <div>
+                <div style="font-size:12px;font-weight:600;color:#fff;">{st.session_state.user}</div>
+                <div style="font-size:10px;color:#333;">{emp['role']}</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+            <div style="background:var(--obsidian-3);border:1px solid var(--border);
+                        border-radius:6px;padding:8px 10px;">
+                <div style="font-size:8px;color:#333;text-transform:uppercase;
+                            letter-spacing:0.1em;margin-bottom:3px;">Day</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:18px;
+                            font-weight:500;color:#fff;">{emp['day']}</div>
+            </div>
+            <div style="background:var(--obsidian-3);border:1px solid var(--border);
+                        border-radius:6px;padding:8px 10px;">
+                <div style="font-size:8px;color:#333;text-transform:uppercase;
+                            letter-spacing:0.1em;margin-bottom:3px;">Region</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:18px;
+                            font-weight:500;color:#fff;">{emp['region']}</div>
+            </div>
+        </div>
+        <div style="font-size:8px;color:#333;text-transform:uppercase;
+                    letter-spacing:0.1em;margin-bottom:5px;">Progress</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px;">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:22px;
+                         font-weight:500;color:#fff;">{live_pct}%</span>
+            <span style="font-size:9px;color:#333;">{emp['stage']}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown('<p class="section-title" style="font-size:1.1rem;margin-bottom:0.5rem;">Employee Progress</p>', unsafe_allow_html=True)
+    st.progress(live_pct / 100)
 
-    for name, data in EMPLOYEES.items():
-        bc = {"On Track": "#6B8F71", "At Risk": "#D4820A", "Overdue": "#C0616B"}[data['status']]
-        badge_cls = badge_map[data['status']]
-        col1, col2, col3 = st.columns([3, 3, 1.8])
+    st.markdown(f"""
+    <div style="margin:8px 12px 0;">
+        <span style="background:{sc_bg};border:1px solid {sc_border};color:{sc};
+                     border-radius:4px;padding:3px 8px;font-size:9px;font-weight:600;
+                     letter-spacing:0.06em;text-transform:uppercase;">{emp['status']}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-        with col1:
+    st.markdown('<div style="height:1px;background:#1A1A1A;margin:12px 0;"></div>', unsafe_allow_html=True)
+
+    st.markdown('<div style="padding:0 16px;">', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:8px;font-weight:600;color:#E11D48;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:8px;">⚡ Action Queue</div>', unsafe_allow_html=True)
+
+    newly_checked = None
+    for task in emp["todos"]:
+        already = task in user_done
+        checked = st.checkbox(task, value=already, key=f"t_{st.session_state.user}_{task}")
+        if checked and not already:
+            newly_checked = task
+            user_done.append(task)
+
+    if newly_checked:
+        st.session_state.celebrate = True
+        st.session_state.history.append({
+            "role": "assistant",
+            "content": f"⬡ **{newly_checked}** marked complete. Progress updated. Keep going.",
+            "sources": [], "chunks": [],
+        })
+        st.rerun()
+
+    if emp["done"]:
+        st.markdown('<div style="font-size:8px;color:#1E1E1E;text-transform:uppercase;letter-spacing:0.12em;margin:10px 0 6px;">Cleared</div>', unsafe_allow_html=True)
+        for item in emp["done"][:3]:
+            st.markdown(f'<div style="display:flex;align-items:center;gap:6px;padding:3px 0;"><div style="width:5px;height:5px;border-radius:50%;background:#1E1E1E;flex-shrink:0;"></div><span style="font-size:10px;color:#1E1E1E;text-decoration:line-through;">{item}</span></div>', unsafe_allow_html=True)
+        for item in user_done:
+            if item not in emp["done"]:
+                st.markdown(f'<div style="display:flex;align-items:center;gap:6px;padding:3px 0;"><div style="width:5px;height:5px;border-radius:50%;background:#E11D48;flex-shrink:0;"></div><span style="font-size:10px;color:#333;text-decoration:line-through;">{item}</span></div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div style="height:1px;background:#1A1A1A;margin:12px 0;"></div>', unsafe_allow_html=True)
+
+    st.markdown('<div style="padding:0 16px;">', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:8px;color:#333;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">Signal</div>', unsafe_allow_html=True)
+    mood_pick = st.radio("", list(MOODS.keys()), index=list(MOODS.keys()).index(st.session_state.mood),
+                         horizontal=True, label_visibility="collapsed")
+    if mood_pick != st.session_state.mood:
+        st.session_state.mood = mood_pick
+        st.rerun()
+    mood_label = MOODS[st.session_state.mood]["label"]
+    st.markdown(f'<div style="font-size:9px;color:#333;margin-top:4px;">Operating at — {mood_label}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div style="height:1px;background:#1A1A1A;margin:12px 0;"></div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding:0 16px 16px;">', unsafe_allow_html=True)
+    view = st.radio("", ["Employee", "Manager"], horizontal=True, label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ── BALLOONS ──────────────────────────────────────────────────────────────────
+if st.session_state.celebrate:
+    st.balloons()
+    st.session_state.celebrate = False
+
+# ── MAIN ──────────────────────────────────────────────────────────────────────
+emp = EMPLOYEES[st.session_state.user]
+sc, sc_bg, sc_border = status_colors(emp["status"])
+mood_gradient = MOODS.get(st.session_state.mood, MOODS["😊"])["gradient"]
+
+if view == "Manager":
+    st.markdown(f"""
+    <div style="padding:28px 32px;background:{mood_gradient};">
+        <div style="font-size:9px;color:#E11D48;text-transform:uppercase;letter-spacing:0.16em;
+                    margin-bottom:8px;font-weight:600;">⬡ MANAGER · OVERSIGHT</div>
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;
+                    color:#fff;letter-spacing:-0.5px;margin-bottom:2px;">Control Overview</div>
+        <div style="font-size:12px;color:#333;">Compliance and onboarding intelligence across your organisation</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    on_t = sum(1 for e in EMPLOYEES.values() if e["status"] == "On Track")
+    at_r = sum(1 for e in EMPLOYEES.values() if e["status"] == "At Risk")
+    ovd = sum(1 for e in EMPLOYEES.values() if e["status"] == "Overdue")
+    avg = int(sum(e["progress"] for e in EMPLOYEES.values()) / len(EMPLOYEES))
+
+    st.markdown('<div style="padding:0 32px 20px;">', unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    for col, val, lbl, color in zip(
+        [c1, c2, c3, c4],
+        [len(EMPLOYEES), f"{avg}%", at_r + ovd, on_t],
+        ["TOTAL OPERATORS", "AVG PROGRESS", "NEEDS ATTENTION", "ON TRACK"],
+        ["#fff", "#fff", "#E11D48", "#10B981"]
+    ):
+        with col:
             st.markdown(f"""
-            <div style="display:flex;align-items:center;gap:10px;padding:0.5rem 0;">
-                <div class="emp-avatar" style="background:{data['color']}22;color:{data['color']};">{data['initials']}</div>
-                <div>
-                    <div style="font-weight:600;font-size:0.9rem;">{name}</div>
-                    <div style="font-size:0.75rem;color:var(--mid);">{data['role']} · Day {data['day']}</div>
-                </div>
+            <div style="background:var(--obsidian-3);border:1px solid var(--border);
+                        border-radius:8px;padding:14px 16px;">
+                <div style="font-size:7.5px;color:#333;text-transform:uppercase;
+                            letter-spacing:0.14em;margin-bottom:6px;font-weight:600;">{lbl}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:26px;
+                            font-weight:500;color:{color};letter-spacing:-0.5px;">{val}</div>
             </div>
             """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown('<div style="padding:0 32px;">', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:8px;color:#333;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:12px;font-weight:600;">Operator Registry</div>', unsafe_allow_html=True)
+
+    for name, data in EMPLOYEES.items():
+        dsc, dsc_bg, dsc_border = status_colors(data["status"])
+        col1, col2, col3 = st.columns([3, 3, 2])
+        with col1:
+            st.markdown(f"""
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+                <div style="width:30px;height:30px;border-radius:50%;background:{dsc_bg};
+                            border:1px solid {dsc_border};display:flex;align-items:center;
+                            justify-content:center;font-size:9px;font-weight:700;color:{dsc};
+                            font-family:'JetBrains Mono',monospace;flex-shrink:0;">{data['initials']}</div>
+                <div>
+                    <div style="font-size:12px;font-weight:500;color:#fff;">{name}</div>
+                    <div style="font-size:10px;color:#333;">{data['role']} · Day {data['day']}</div>
+                </div>
+            </div>""", unsafe_allow_html=True)
         with col2:
-            st.markdown('<div style="padding-top:0.7rem;"></div>', unsafe_allow_html=True)
-            st.progress(data['progress'] / 100)
-            st.markdown(f'<p style="font-size:0.72rem;color:var(--mid);margin-top:-0.4rem;">{data["progress"]}% · {data["stage"]}</p>', unsafe_allow_html=True)
-
+            st.markdown('<div style="padding-top:10px;"></div>', unsafe_allow_html=True)
+            st.progress(data["progress"] / 100)
+            st.markdown(f'<div style="font-size:9px;color:#333;margin-top:-4px;font-family:JetBrains Mono,monospace;">{data["progress"]}% · {data["stage"]}</div>', unsafe_allow_html=True)
         with col3:
-            st.markdown('<div style="padding-top:0.55rem;display:flex;flex-direction:column;gap:6px;">', unsafe_allow_html=True)
-            st.markdown(f'<span class="badge {badge_cls}">{data["status"]}</span>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            if data['status'] in ['At Risk', 'Overdue']:
-                if st.button(f"Nudge {name.split()[0]}", key=f"nudge_{name}"):
-                    st.toast(f"Nudge sent to {name.split()[0]}! 👋", icon="✅")
+            st.markdown(f'<div style="padding-top:10px;"><span style="background:{dsc_bg};border:1px solid {dsc_border};color:{dsc};border-radius:4px;padding:3px 8px;font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">{data["status"]}</span></div>', unsafe_allow_html=True)
+            if data["status"] in ["At Risk", "Overdue"]:
+                if st.button(f"Nudge", key=f"nudge_{name}"):
+                    st.toast(f"Signal sent to {name.split()[0]}", icon="⬡")
+        st.markdown('<div style="height:1px;background:#111;margin:2px 0;"></div>', unsafe_allow_html=True)
 
-        st.markdown('<hr style="border:none;border-top:1px solid var(--border);margin:0.15rem 0;">', unsafe_allow_html=True)
-
-    st.markdown('<br>', unsafe_allow_html=True)
-    st.markdown('<p class="section-title" style="font-size:1.1rem;margin-bottom:0.4rem;">Compliance by Department</p>', unsafe_allow_html=True)
-    st.markdown('<p class="section-sub" style="margin-bottom:0.75rem;">Percentage of employees with all mandatory training complete</p>', unsafe_allow_html=True)
-
+    st.markdown('<br><div style="font-size:8px;color:#333;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:12px;font-weight:600;">Compliance Matrix</div>', unsafe_allow_html=True)
     dept_items = list(DEPT_COMPLIANCE.items())
-    rows = [dept_items[i:i+3] for i in range(0, len(dept_items), 3)]
-    for row in rows:
+    for row_items in [dept_items[:3], dept_items[3:]]:
         cols = st.columns(3)
-        for col, (dept, data) in zip(cols, row):
-            color = heatmap_color(data['pct'])
+        for col, (dept, data) in zip(cols, row_items):
+            color = "#10B981" if data["pct"] >= 85 else "#F59E0B" if data["pct"] >= 60 else "#E11D48"
             with col:
                 st.markdown(f"""
-                <div class="heatmap-card">
-                    <div class="heatmap-dept">{dept}</div>
-                    <div class="heatmap-bar-track">
-                        <div class="heatmap-bar-fill" style="width:{data['pct']}%;background:{color};"></div>
+                <div style="background:var(--obsidian-3);border:1px solid var(--border);
+                            border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+                    <div style="font-size:10px;font-weight:600;color:#fff;margin-bottom:6px;">{dept}</div>
+                    <div style="height:2px;background:#111;border-radius:99px;overflow:hidden;margin-bottom:5px;">
+                        <div style="width:{data['pct']}%;height:100%;background:{color};border-radius:99px;"></div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span class="heatmap-pct" style="color:{color};font-weight:600;">{data['pct']}% compliant</span>
-                        <span style="font-size:0.7rem;color:var(--mid);">{data['employees']} employees</span>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;
+                                     font-weight:500;color:{color};">{data['pct']}%</span>
+                        <span style="font-size:9px;color:#333;">{data['employees']} ops</span>
                     </div>
-                    {"" if data['flagged'] == 0 else f'<div style="font-size:0.72rem;color:#B85460;margin-top:0.35rem;">⚠ {data[chr(102)+"lagged"]} flagged</div>'}
-                </div>
-                """, unsafe_allow_html=True)
+                    {"" if not data['flagged'] else f'<div style="font-size:9px;color:#E11D48;margin-top:4px;">⚡ {data["flagged"]} flagged</div>'}
+                </div>""", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 else:
     first = st.session_state.user.split()[0]
 
-    # Trigger balloons if task was just completed
-    if st.session_state.celebrate:
-        st.balloons()
-        st.session_state.celebrate = False
+    # ── LIFECYCLE BREADCRUMB ──────────────────────────────────────────────────
+    current_stage = emp["stage"]
+    stage_map = {"Intake": 0, "IT Setup": 1, "Orientation": 2, "Tool Training": 3,
+                 "First Project": 4, "30-Day Check-in": 5, "BGV": 6, "Offboard": 7, "Exit": 8}
+    current_idx = stage_map.get(current_stage, 3)
+
+    stages_html = ""
+    for i, s in enumerate(STAGES):
+        if i < current_idx:
+            color, bg, weight = "#333", "transparent", "400"
+        elif i == current_idx:
+            color, bg, weight = "#E11D48", "rgba(225,29,72,0.08)", "600"
+        else:
+            color, bg, weight = "#1E1E1E", "transparent", "400"
+        arrow = '<span style="color:#1A1A1A;margin:0 4px;font-size:10px;">›</span>' if i < len(STAGES)-1 else ""
+        stages_html += f'<span style="font-size:8px;font-weight:{weight};color:{color};background:{bg};padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;">{s}</span>{arrow}'
 
     st.markdown(f"""
-    <div class="greeting-card">
-        <p class="greet-name">Hey, {first} 👋</p>
-        <p class="greet-day">Day {emp['day']} · {emp['stage']}</p>
-        <div class="greet-nudge">💬 {emp['greeting']}</div>
+    <div style="background:var(--obsidian-2);border-bottom:1px solid var(--border);
+                padding:10px 28px;display:flex;align-items:center;gap:0;overflow-x:auto;flex-wrap:nowrap;">
+        {stages_html}
     </div>
     """, unsafe_allow_html=True)
 
-    # ── MOOD CHECK ────────────────────────────────────────────────
-    if "mood" not in st.session_state:
-        st.session_state.mood = None
+    # ── KPI ROW ───────────────────────────────────────────────────────────────
+    user_done = st.session_state.completed[st.session_state.user]
+    total_t = len(emp["todos"]) + len(emp["done"])
+    done_t = len(emp["done"]) + len([t for t in user_done if t in emp["todos"]])
+    live_pct = int((done_t / total_t) * 100) if total_t else emp["progress"]
 
-    MOODS = {
-        "🌟 Energised": {"label": "energised", "color": "#6B8F71", "bg": "#E8F0E9"},
-        "😊 Good":      {"label": "good",       "color": "#7B6FA0", "bg": "#EEEDF8"},
-        "😐 Okay":      {"label": "okay",        "color": "#D4820A", "bg": "#FEF3E2"},
-        "😔 Drained":   {"label": "drained",     "color": "#B85460", "bg": "#FDEAEC"},
-    }
+    st.markdown('<div style="padding:16px 28px 0;">', unsafe_allow_html=True)
+    k1, k2, k3, k4 = st.columns(4)
+    kpi_data = [
+        ("PROGRESS", f"{live_pct}%", sc),
+        ("BGV STATUS", emp["bgv"], "#10B981"),
+        ("TENURE DAY", f"D-{emp['day']}", "#94A3B8"),
+        ("REGION", emp["region"], "#94A3B8"),
+    ]
+    for col, (lbl, val, color) in zip([k1, k2, k3, k4], kpi_data):
+        with col:
+            st.markdown(f"""
+            <div style="background:var(--obsidian-3);border:1px solid var(--border);
+                        border-radius:8px;padding:12px 14px;">
+                <div style="font-size:7.5px;color:#333;text-transform:uppercase;
+                            letter-spacing:0.14em;margin-bottom:5px;font-weight:600;">{lbl}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:20px;
+                            font-weight:500;color:{color};">{val}</div>
+            </div>
+            """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.session_state.mood is None:
-        st.markdown("""
-        <div style="background:white;border-radius:14px;padding:1.1rem 1.25rem;
-                    border:1px solid var(--border);margin-bottom:1.25rem;">
-            <p style="font-size:0.85rem;font-weight:500;color:var(--charcoal);margin:0 0 0.65rem;">
-                How are you feeling today, <strong>{first}</strong>?
-            </p>
-        """.replace("{first}", first), unsafe_allow_html=True)
+    # ── GREETING ──────────────────────────────────────────────────────────────
+    st.markdown(f"""
+    <div style="padding:16px 28px 12px;background:{mood_gradient};">
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:4px;">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:500;
+                        color:#fff;letter-spacing:-0.3px;">Hello, {first}.</div>
+            <span style="background:{sc_bg};border:1px solid {sc_border};color:{sc};
+                         border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;
+                         letter-spacing:0.06em;text-transform:uppercase;">{emp['status']}</span>
+        </div>
+        <div style="font-size:12px;color:#333;border-left:2px solid #E11D48;
+                    padding-left:10px;line-height:1.6;">{emp['greeting']}</div>
+    </div>
+    <div style="height:1px;background:#111;"></div>
+    """, unsafe_allow_html=True)
 
-        mood_cols = st.columns(4)
-        for col, (emoji_label, mdata) in zip(mood_cols, MOODS.items()):
-            with col:
-                if st.button(emoji_label, key=f"mood_{emoji_label}", use_container_width=True):
-                    st.session_state.mood = mdata['label']
-                    st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        mood_data = next(m for m in MOODS.values() if m['label'] == st.session_state.mood)
+    # ── MAIN BENTO: 2:1 SPLIT ─────────────────────────────────────────────────
+    st.markdown('<div style="padding:16px 28px;">', unsafe_allow_html=True)
+    col_chat, col_intel = st.columns([2, 1], gap="medium")
+
+    with col_chat:
         st.markdown(f"""
-        <div style="background:{mood_data['bg']};border-radius:10px;padding:0.6rem 1rem;
-                    margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;">
-            <span style="font-size:0.82rem;color:{mood_data['color']};font-weight:500;">
-                Feeling {st.session_state.mood} today — Buddy will keep that in mind 💙
-            </span>
+        <div style="background:var(--obsidian-2);border:1px solid var(--border);
+                    border-radius:10px;overflow:hidden;">
+            <div style="padding:10px 14px;border-bottom:1px solid var(--border);
+                        display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:8px;color:#333;text-transform:uppercase;
+                            letter-spacing:0.14em;font-weight:600;">⬡ COMMAND TERMINAL</div>
+                <div style="font-size:8px;color:#1E1E1E;font-family:'JetBrains Mono',monospace;">
+                    {len(st.session_state.history)//2} exchanges
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
-    # ── CHAT ──────────────────────────────────────────────────────
-    st.markdown('<p class="section-title" style="font-size:1.15rem;margin-bottom:0.3rem;">Ask Buddy anything</p>', unsafe_allow_html=True)
-    st.markdown('<p style="font-size:0.83rem;color:var(--mid);margin-bottom:1rem;">HR policies, onboarding steps, tool access, leave — Buddy reads the handbook so you don\'t have to.</p>', unsafe_allow_html=True)
+        # Chat messages
+        if st.session_state.history:
+            for msg in st.session_state.history:
+                if msg["role"] == "user":
+                    st.markdown(f"""
+                    <div style="background:var(--obsidian-4);border:1px solid var(--border);
+                                border-radius:8px 8px 2px 8px;padding:10px 14px;
+                                margin:8px 0 8px 20%;font-size:12px;color:#94A3B8;line-height:1.55;">
+                        {msg["content"]}
+                    </div>""", unsafe_allow_html=True)
+                else:
+                    src_tags = "".join([f'<span style="background:rgba(225,29,72,0.08);color:#E11D48;border:1px solid rgba(225,29,72,0.2);border-radius:4px;padding:1px 6px;font-size:8px;font-weight:600;margin-right:4px;letter-spacing:0.06em;">{s}</span>' for s in msg.get("sources", [])])
+                    st.markdown(f"""
+                    <div style="margin:4px 0 4px 0;">
+                        <div style="font-size:8px;color:#333;text-transform:uppercase;
+                                    letter-spacing:0.12em;margin-bottom:5px;font-weight:600;">⬡ BUDDY</div>
+                        <div style="background:var(--glass);border:1px solid var(--glass-border);
+                                    border-radius:2px 8px 8px 8px;padding:12px 14px;
+                                    margin-right:10%;backdrop-filter:blur(8px);">
+                            <div style="font-size:12px;color:#94A3B8;line-height:1.7;">
+                                {msg["content"]}
+                            </div>
+                            {('<div style="margin-top:8px;">' + src_tags + '</div>') if src_tags else ''}
+                        </div>
+                    </div>""", unsafe_allow_html=True)
 
-    if st.session_state.history:
-        for i, msg in enumerate(st.session_state.history):
-            if msg['role'] == 'user':
-                st.markdown(f'<div class="chat-user">{msg["content"]}</div>', unsafe_allow_html=True)
-            else:
-                sources_html = "".join([f'<span class="source-tag">📄 {s}</span>' for s in msg.get('sources', [])])
-                st.markdown(f'<div class="buddy-label">🤝 Buddy</div><div class="chat-buddy">{msg["content"]}{("<br>" + sources_html) if sources_html else ""}</div>', unsafe_allow_html=True)
-                if msg.get('chunks'):
-                    with st.expander('🔍 View source from handbook', expanded=False):
-                        for j, chunk in enumerate(msg['chunks'][:2]):
-                            st.markdown(f'<div style="background:#FAF7F2;border-left:3px solid #6B8F71;border-radius:0 8px 8px 0;padding:0.75rem 1rem;margin-bottom:0.5rem;font-size:0.82rem;color:#2C2C2C;line-height:1.6;"><span style="font-size:0.68rem;font-weight:600;color:#6B8F71;text-transform:uppercase;letter-spacing:0.05em;">Source {j+1} — Employee Handbook</span><br><br>{chunk}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div style="margin-bottom:1rem;">
-            <span class="suggestion-chip">What's the PTO policy?</span>
-            <span class="suggestion-chip">What do I need this week?</span>
-            <span class="suggestion-chip">How do I submit expenses?</span>
-            <span class="suggestion-chip">When's my 30-day check-in?</span>
+                    if msg.get("chunks"):
+                        with st.expander("⬡ SOURCE INTEGRITY — view retrieved context", expanded=False):
+                            for j, chunk in enumerate(msg["chunks"][:2]):
+                                st.markdown(f"""
+                                <div style="background:var(--obsidian-4);border-left:2px solid #E11D48;
+                                            border-radius:0 6px 6px 0;padding:10px 12px;
+                                            margin-bottom:8px;font-size:10px;color:#333;
+                                            line-height:1.7;font-family:'JetBrains Mono',monospace;">
+                                    <div style="font-size:8px;color:#E11D48;text-transform:uppercase;
+                                                letter-spacing:0.1em;margin-bottom:6px;font-weight:600;">
+                                        CHUNK {j+1} · COSINE SCORE: {msg.get('scores', [0,0])[j] if j < len(msg.get('scores',[])) else '—'}
+                                    </div>
+                                    {chunk}
+                                </div>""", unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div style="padding:20px 14px;">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    {"".join([f'<span style="background:var(--obsidian-4);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:10px;color:#333;cursor:pointer;">{q}</span>' for q in ["PTO policy?", "What's due this week?", "Expense submission?", "When's my 30-day check-in?"]])}
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+        # Input
+        col_q, col_prep = st.columns([3, 1])
+        with col_q:
+            query = st.text_input("", placeholder=f"Query the system, {first}…",
+                                  label_visibility="collapsed")
+        with col_prep:
+            prep = st.button("⬡ 1-on-1 Brief", use_container_width=True)
+
+        if prep:
+            with st.spinner(""):
+                client = Groq(api_key=api_key)
+                r = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[{"role": "user", "content": f"""You are Buddy, an HR assistant.
+Generate a concise 1-on-1 prep brief for {first}.
+Role: {emp['role']}, Day {emp['day']}, Stage: {emp['stage']}, Status: {emp['status']}
+Done: {', '.join(emp['done'])}. Pending: {', '.join(emp['todos'])}.
+Mood: {MOODS.get(st.session_state.mood, {}).get('label', 'neutral')}.
+Write 3 short paragraphs. Professional but warm. Sign off as {first}."""}]
+                )
+            st.session_state.history.append({"role": "user", "content": "⬡ Generate 1-on-1 brief"})
+            st.session_state.history.append({"role": "assistant", "content": r.choices[0].message.content, "sources": [], "chunks": [], "scores": []})
+            st.rerun()
+
+        if query:
+            st.session_state.history.append({"role": "user", "content": query})
+            with st.spinner(""):
+                top_chunks, scores = query_db(st.session_state.chunks, st.session_state.vecs, st.session_state.model_emb, query)
+                context = "\n\n".join(top_chunks)
+                q_lower = query.lower()
+                for kw in ["pto", "leave", "vacation", "training", "ethics", "tool", "asana", "bgv", "1-on-1", "expense", "onboard"]:
+                    if kw in q_lower:
+                        st.session_state.active_source = kw
+                        break
+                mood_note = ""
+                m = MOODS.get(st.session_state.mood, {}).get("label", "")
+                if m in ["drained", "okay"]:
+                    mood_note = "Employee is feeling drained. Be concise and supportive."
+                elif m == "energised":
+                    mood_note = "Employee is energised. Be direct and proactive."
+                client = Groq(api_key=api_key)
+                resp = client.chat.completions.create(
+                    model="llama-3.1-8b-instant",
+                    messages=[{"role": "user", "content": f"""You are Buddy, an HR intelligence assistant.
+Employee: {st.session_state.user}, {emp['role']}, Day {emp['day']}, {emp['stage']}, {emp['status']}
+Pending: {', '.join(emp['todos'])}. Done: {', '.join(emp['done'])}. {mood_note}
+Handbook: {context}
+Question: {query}
+Answer in 2-3 sentences. Be precise, warm, and specific to this employee."""}]
+                )
+                buddy_reply = resp.choices[0].message.content
+                sources = ["Employee Handbook"] if scores[0] > 0.3 else []
+            st.session_state.history.append({"role": "assistant", "content": buddy_reply, "sources": sources, "chunks": top_chunks, "scores": scores})
+            st.rerun()
+
+        if st.session_state.history:
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Clear terminal", type="secondary"):
+                    st.session_state.history = []
+                    st.session_state.active_source = None
+                    st.rerun()
+            with c2:
+                if st.button("Reset signal", type="secondary"):
+                    st.session_state.mood = "😊"
+                    st.rerun()
+
+    # ── INTELLIGENCE FEED ─────────────────────────────────────────────────────
+    with col_intel:
+        # Active RAG source
+        active = st.session_state.active_source
+        st.markdown(f"""
+        <div style="background:var(--obsidian-2);border:1px solid var(--border);
+                    border-radius:10px;padding:14px;margin-bottom:10px;">
+            <div style="font-size:8px;color:#333;text-transform:uppercase;
+                        letter-spacing:0.14em;font-weight:600;margin-bottom:10px;">⬡ LIVE SOURCE</div>
+            <div style="font-size:9px;color:#1E1E1E;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px;">PTO Policy</div>
+            <div style="font-size:10px;color:#1E1E1E;line-height:1.6;margin-bottom:4px;">20 days/year. 10 sick days separate.</div>
+            {"<div style='background:rgba(225,29,72,0.06);border-left:2px solid #E11D48;padding:5px 8px;font-size:10px;color:#555;border-radius:0 4px 4px 0;'>Submit via HR Portal — 5 days advance.</div>" if active and "pto" in active.lower() else "<div style='font-size:10px;color:#1A1A1A;padding:4px 0;'>Submit via HR Portal — 5 days advance.</div>"}
+            <div style="font-size:9px;color:#1E1E1E;text-transform:uppercase;letter-spacing:0.1em;margin:8px 0 3px;">Training</div>
+            {"<div style='background:rgba(225,29,72,0.06);border-left:2px solid #E11D48;padding:5px 8px;font-size:10px;color:#555;border-radius:0 4px 4px 0;'>Harassment + AI Ethics + Tools — 14 days.</div>" if active and "training" in active.lower() else "<div style='font-size:10px;color:#1A1A1A;'>Harassment + AI Ethics + Tools — 14 days.</div>"}
+            <div style="font-size:9px;color:#1E1E1E;text-transform:uppercase;letter-spacing:0.1em;margin:8px 0 3px;">1-on-1s</div>
+            {"<div style='background:rgba(225,29,72,0.06);border-left:2px solid #E11D48;padding:5px 8px;font-size:10px;color:#555;border-radius:0 4px 4px 0;'>Every Friday. First within 3 days.</div>" if active and "1-on-1" in active.lower() else "<div style='font-size:10px;color:#1A1A1A;'>Every Friday. First within 3 days.</div>"}
+            {('<div style="margin-top:8px;font-size:8px;color:#E11D48;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;">↑ Source active for last query</div>') if active else ''}
         </div>
         """, unsafe_allow_html=True)
 
-    # ── 1-ON-1 PREP BUTTON ────────────────────────────────────────
-    col_input, col_oneon = st.columns([4, 1.4])
-    with col_input:
-        query = st.text_input("", placeholder=f"Ask Buddy something, {first}…", label_visibility="collapsed")
-    with col_oneon:
-        prep_clicked = st.button("📋 Prep my 1-on-1", use_container_width=True)
+        # Next milestone
+        days = emp["days_to_milestone"]
+        milestone_color = "#E11D48" if days <= 0 else "#F59E0B" if days <= 5 else "#10B981"
+        days_label = f"OVERDUE {abs(days)}d" if days <= 0 else f"{days}d remaining"
+        st.markdown(f"""
+        <div style="background:var(--obsidian-2);border:1px solid {'rgba(225,29,72,0.3)' if days <= 0 else ('rgba(245,158,11,0.3)' if days <= 5 else '#1A1A1A')};
+                    border-radius:10px;padding:14px;margin-bottom:10px;">
+            <div style="font-size:8px;color:#333;text-transform:uppercase;
+                        letter-spacing:0.14em;font-weight:600;margin-bottom:8px;">⬡ NEXT MILESTONE</div>
+            <div style="font-size:13px;font-weight:500;color:#fff;margin-bottom:4px;">{emp['next_milestone']}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{milestone_color};
+                        font-weight:500;">{days_label}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    if prep_clicked:
-        with st.spinner("Drafting your 1-on-1 summary…"):
-            client = Groq(api_key=api_key)
-            prep_prompt = f"""You are Buddy, an HR assistant helping {first} prepare for their weekly Friday 1-on-1 with their manager.
+        # Critical blocker tile
+        if emp["status"] in ["At Risk", "Overdue"]:
+            blocker_color = "#E11D48" if emp["status"] == "At Risk" else "#F59E0B"
+            st.markdown(f"""
+            <div style="background:rgba(225,29,72,0.04);border:1px solid rgba(225,29,72,0.2);
+                        border-radius:10px;padding:14px;margin-bottom:10px;">
+                <div style="font-size:8px;color:#E11D48;text-transform:uppercase;
+                            letter-spacing:0.14em;font-weight:600;margin-bottom:8px;">⚡ CRITICAL BLOCKER</div>
+                {"".join([f'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(225,29,72,0.1);"><div style="width:4px;height:4px;border-radius:50%;background:#E11D48;flex-shrink:0;"></div><span style="font-size:10px;color:#94A3B8;">{t}</span></div>' for t in emp["todos"]])}
+            </div>
+            """, unsafe_allow_html=True)
 
-Employee context:
-- Name: {st.session_state.user}, Role: {emp['role']}
-- Day {emp['day']} of onboarding, Stage: {emp['stage']}
-- Completed this week: {', '.join(emp['done'])}
-- Still pending: {', '.join(emp['todos'])}
-- Current status: {emp['status']}
-- Energy today: {st.session_state.mood or 'not specified'}
+        # Mood indicator
+        mood_label = MOODS.get(st.session_state.mood, {}).get("label", "neutral")
+        st.markdown(f"""
+        <div style="background:var(--obsidian-2);border:1px solid var(--border);
+                    border-radius:10px;padding:14px;">
+            <div style="font-size:8px;color:#333;text-transform:uppercase;
+                        letter-spacing:0.14em;font-weight:600;margin-bottom:8px;">⬡ SIGNAL</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:22px;">{st.session_state.mood}</div>
+                <div>
+                    <div style="font-size:11px;font-weight:500;color:#fff;text-transform:capitalize;">{mood_label}</div>
+                    <div style="font-size:9px;color:#333;">Buddy adapts to your state</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-Write a short, friendly 1-on-1 prep summary they can copy-paste to their manager.
-Include: what went well, what's still in progress, one thing they need support with.
-Keep it warm, honest, 3-4 short paragraphs. Sign off as if from {first}."""
-
-            prep_response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": prep_prompt}]
-            )
-            prep_text = prep_response.choices[0].message.content
-
-        st.session_state.history.append({"role": "user", "content": "📋 Generate my 1-on-1 prep summary"})
-        st.session_state.history.append({"role": "assistant", "content": prep_text, "sources": []})
-        st.rerun()
-
-    if query:
-        st.session_state.history.append({"role": "user", "content": query})
-        with st.spinner(""):
-            top_chunks, scores = query_db(
-                st.session_state.chunks, st.session_state.vecs,
-                st.session_state.model, query
-            )
-            context = "\n\n".join(top_chunks)
-            client = Groq(api_key=api_key)
-
-            mood_instruction = ""
-            if st.session_state.mood in ["drained", "okay"]:
-                mood_instruction = f"The employee has indicated they are feeling {st.session_state.mood} today. Be extra gentle, brief, and supportive. Don't overwhelm them with tasks."
-            elif st.session_state.mood == "energised":
-                mood_instruction = "The employee is feeling energised today. You can be upbeat and proactive — suggest what they could get ahead on."
-
-            prompt = f"""You are Buddy, a warm and knowledgeable HR assistant.
-You know this employee personally:
-- Name: {st.session_state.user}
-- Role: {emp['role']}
-- Day {emp['day']} of onboarding, currently in: {emp['stage']}
-- Status: {emp['status']}
-- Still to complete: {', '.join(emp['todos'])}
-- Already done: {', '.join(emp['done'])}
-{mood_instruction}
-
-HR Handbook context:
-{context}
-
-Employee question: {query}
-
-Respond warmly and specifically. Reference their personal situation when relevant.
-2-4 sentences max. Write naturally, no bullet lists."""
-
-            response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
-                messages=[{"role": "user", "content": prompt}]
-            )
-            buddy_reply = response.choices[0].message.content
-            sources = ["Employee Handbook"] if scores[0] > 0.3 else []
-
-        st.session_state.history.append({"role": "assistant", "content": buddy_reply, "sources": sources, "chunks": top_chunks})
-        st.rerun()
-
-    if st.session_state.history:
-        col_clear, col_mood_reset = st.columns([2, 1])
-        with col_clear:
-            if st.button("Clear conversation", type="secondary"):
-                st.session_state.history = []
-                st.rerun()
-        with col_mood_reset:
-            if st.button("Reset mood", type="secondary"):
-                st.session_state.mood = None
-                st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
