@@ -182,24 +182,23 @@ p, label, span {
 }
 
 .task-card {
-    padding: 0.85rem 1rem;
-    border-radius: 16px;
-    background: rgba(107,161,118,0.08);
-    border: 1px solid rgba(107,161,118,0.18);
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
     margin-bottom: 1rem;
 }
 
 .task-title {
     color: white;
     font-weight: 700;
-    font-size: 0.95rem;
     margin-bottom: 0.35rem;
 }
 
 .task-line {
-    color: #c9cbd1;
-    font-size: 0.86rem;
-    margin: 0.18rem 0;
+    color: #d4d4d8;
+    font-size: 0.92rem;
+    margin: 0.25rem 0;
 }
 
 .response-card {
@@ -324,8 +323,6 @@ if "last_answer" not in st.session_state:
     st.session_state.last_answer = ""
 if "last_chunks" not in st.session_state:
     st.session_state.last_chunks = []
-if "last_followups" not in st.session_state:
-    st.session_state.last_followups = []
 
 # -----------------------------
 # Sidebar
@@ -356,8 +353,12 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.divider()
-    st.caption("Built as a simple AI onboarding assistant.")
-    view_mode = "Employee Portal"
+    st.markdown('<div class="sidebar-small-label">View</div>', unsafe_allow_html=True)
+    view_mode = st.radio(
+        "View",
+        ["Employee Portal", "HR Manager View"],
+        label_visibility="collapsed"
+    )
 
 # -----------------------------
 # Employee Portal
@@ -370,11 +371,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Lightweight reminder card
+# Today's priorities
 st.markdown("""
 <div class="task-card">
-    <div class="task-title">Current onboarding focus</div>
-    <div class="task-line">AI Ethics Training · Tool Onboarding · First Project</div>
+    <div class="task-title">Today's priorities</div>
+    <div class="task-line">☐ Complete AI Ethics Training</div>
+    <div class="task-line">☐ Finish Tool Onboarding</div>
+    <div class="task-line">☐ Prepare for first 1-on-1</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -394,6 +397,20 @@ cols = st.columns(4)
 for i, question in enumerate(starters):
     if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
         st.session_state.selected_question = question
+
+# Quick actions
+st.caption("Quick actions:")
+action_cols = st.columns(4)
+for i, action in enumerate(quick_actions):
+    if action_cols[i].button(action, use_container_width=True, key=f"action_{i}"):
+        if action == "Request PTO":
+            st.session_state.selected_question = "How do I request PTO?"
+        elif action == "Contact IT":
+            st.session_state.selected_question = "Who do I contact for IT support?"
+        elif action == "View onboarding checklist":
+            st.session_state.selected_question = "What are my onboarding steps?"
+        else:
+            st.session_state.selected_question = "What should I prepare for my first 1-on-1?"
 
 query = st.text_input(
     "Ask Buddy something:",
@@ -416,7 +433,7 @@ if query:
             prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
 If you do not know the answer, say so honestly and suggest they reach out to their HR team.
-Be friendly, specific, and concise.
+Keep the response concise, professional, warm, and direct. Avoid overly long supportive language. Maximum 3 short paragraphs.
 
 HR Context:
 {context}
@@ -439,7 +456,7 @@ Buddy Response:"""
             st.error(f"Buddy could not respond right now. Please try again. ({type(e).__name__})")
 
 if st.session_state.last_answer:
-    st.markdown("### Buddy says")
+    st.markdown("### Buddy says:")
     st.markdown(f'<div class="response-card">{st.session_state.last_answer}</div>', unsafe_allow_html=True)
 
     with st.expander("View source used"):
