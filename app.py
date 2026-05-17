@@ -38,13 +38,6 @@ task_list = [
     "Prepare for first 1-on-1",
 ]
 
-quick_actions = [
-    "Request PTO",
-    "Contact IT",
-    "View onboarding checklist",
-    "Prepare for 1-on-1",
-]
-
 # -----------------------------
 # Page setup
 # -----------------------------
@@ -189,23 +182,24 @@ p, label, span {
 }
 
 .task-card {
-    padding: 1rem 1.1rem;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: rgba(107,161,118,0.08);
+    border: 1px solid rgba(107,161,118,0.18);
     margin-bottom: 1rem;
 }
 
 .task-title {
     color: white;
     font-weight: 700;
+    font-size: 0.95rem;
     margin-bottom: 0.35rem;
 }
 
 .task-line {
-    color: #d4d4d8;
-    font-size: 0.92rem;
-    margin: 0.25rem 0;
+    color: #c9cbd1;
+    font-size: 0.86rem;
+    margin: 0.18rem 0;
 }
 
 .response-card {
@@ -362,108 +356,64 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.divider()
-    st.markdown('<div class="sidebar-small-label">View</div>', unsafe_allow_html=True)
-    view_mode = st.radio(
-        "View",
-        ["Employee Portal", "HR Manager View"],
-        label_visibility="collapsed"
-    )
-
-# -----------------------------
-# Manager View
-# -----------------------------
-if view_mode == "HR Manager View":
-    st.title("📈 Manager Insights")
-    st.caption("Quick overview of employee onboarding progress.")
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Onboarding Avg", "51%")
-    col2.metric("At Risk", "1")
-    col3.metric("Overdue Tasks", "4")
-
-    st.subheader("Employee Progress")
-    for emp in employees_stats:
-        with st.expander(f"{emp['name']} — {emp['role']}"):
-            c1, c2 = st.columns([3, 1])
-            c1.progress(emp["progress"] / 100, text=f"{emp['progress']}% complete")
-            if emp["status"] in ["At Risk", "Overdue"]:
-                if c2.button(f"Nudge {emp['name'].split()[0]}", key=emp["name"]):
-                    st.toast(f"Nudge sent to {emp['name']}!", icon="👋")
-            else:
-                c2.success(emp["status"])
+    st.caption("Built as a simple AI onboarding assistant.")
+    view_mode = "Employee Portal"
 
 # -----------------------------
 # Employee Portal
 # -----------------------------
-else:
-    st.markdown("""
-    <div class="hero-card">
-        <h1>🤝 Buddy</h1>
-        <p style="font-size:1.05rem; font-weight:600; margin-bottom:0.25rem;">Your AI workplace assistant</p>
-        <p style="color:#a1a1aa;">Ask me anything about HR policies, onboarding, tools, training, or PTO.</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<div class="hero-card">
+    <h1>🤝 Buddy</h1>
+    <p style="font-size:1.05rem; font-weight:600; margin-bottom:0.25rem;">Your AI workplace assistant</p>
+    <p style="color:#a1a1aa;">Ask me anything about HR policies, onboarding, tools, training, or PTO.</p>
+</div>
+""", unsafe_allow_html=True)
 
-    # Today's priorities
-    st.markdown("""
-    <div class="task-card">
-        <div class="task-title">Today's priorities</div>
-        <div class="task-line">☐ Complete AI Ethics Training</div>
-        <div class="task-line">☐ Finish Tool Onboarding</div>
-        <div class="task-line">☐ Prepare for first 1-on-1</div>
-    </div>
-    """, unsafe_allow_html=True)
+# Lightweight reminder card
+st.markdown("""
+<div class="task-card">
+    <div class="task-title">Current onboarding focus</div>
+    <div class="task-line">AI Ethics Training · Tool Onboarding · First Project</div>
+</div>
+""", unsafe_allow_html=True)
 
-    if "chunks" not in st.session_state:
-        with st.spinner("Buddy is loading the HR handbook..."):
-            st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
+if "chunks" not in st.session_state:
+    with st.spinner("Buddy is loading the HR handbook..."):
+        st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
 
-    starters = [
-        "How many PTO days do I have?",
-        "What trainings are pending?",
-        "What tools do I need?",
-        "When are 1-on-1s?",
-    ]
+starters = [
+    "How many PTO days do I have?",
+    "What trainings are pending?",
+    "What tools do I need?",
+    "When are 1-on-1s?",
+]
 
-    st.caption("Try asking:")
-    cols = st.columns(4)
-    for i, question in enumerate(starters):
-        if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
-            st.session_state.selected_question = question
+st.caption("Try asking:")
+cols = st.columns(4)
+for i, question in enumerate(starters):
+    if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
+        st.session_state.selected_question = question
 
-    # Quick actions
-    st.caption("Quick actions:")
-    action_cols = st.columns(4)
-    for i, action in enumerate(quick_actions):
-        if action_cols[i].button(action, use_container_width=True, key=f"action_{i}"):
-            if action == "Request PTO":
-                st.session_state.selected_question = "How do I request PTO?"
-            elif action == "Contact IT":
-                st.session_state.selected_question = "Who do I contact for IT support?"
-            elif action == "View onboarding checklist":
-                st.session_state.selected_question = "What are my onboarding steps?"
-            else:
-                st.session_state.selected_question = "What should I prepare for my first 1-on-1?"
+query = st.text_input(
+    "Ask Buddy something:",
+    value=st.session_state.selected_question,
+    placeholder="Example: What trainings do I need to complete?"
+)
 
-    query = st.text_input(
-        "Ask Buddy something:",
-        value=st.session_state.selected_question,
-        placeholder="Example: What trainings do I need to complete?"
-    )
+if query:
+    with st.spinner("Buddy is reviewing HR documents..."):
+        try:
+            top_chunks = query_vector_db(
+                st.session_state.chunks,
+                st.session_state.embeddings_matrix,
+                st.session_state.embeddings_model,
+                query,
+            )
+            context = "\n".join(top_chunks)
 
-    if query:
-        with st.spinner("Buddy is reviewing HR documents..."):
-            try:
-                top_chunks = query_vector_db(
-                    st.session_state.chunks,
-                    st.session_state.embeddings_matrix,
-                    st.session_state.embeddings_model,
-                    query,
-                )
-                context = "\n".join(top_chunks)
-
-                client = Groq(api_key=api_key)
-                prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
+            client = Groq(api_key=api_key)
+            prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
 Use the HR context below to answer the employee question accurately.
 If you do not know the answer, say so honestly and suggest they reach out to their HR team.
 Be friendly, specific, and concise.
@@ -475,31 +425,31 @@ Employee Question: {query}
 
 Buddy Response:"""
 
-                response = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=[{"role": "user", "content": prompt}],
-                )
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": prompt}],
+            )
 
-                answer = response.choices[0].message.content
-                st.session_state.last_answer = answer
-                st.session_state.last_chunks = top_chunks
-                st.session_state.last_followups = get_followups(query)
+            answer = response.choices[0].message.content
+            st.session_state.last_answer = answer
+            st.session_state.last_chunks = top_chunks
+            st.session_state.last_followups = get_followups(query)
 
-            except Exception as e:
-                st.error(f"Buddy could not respond right now. Please try again. ({type(e).__name__})")
+        except Exception as e:
+            st.error(f"Buddy could not respond right now. Please try again. ({type(e).__name__})")
 
-    if st.session_state.last_answer:
-        st.markdown("### Buddy says:")
-        st.markdown(f'<div class="response-card">{st.session_state.last_answer}</div>', unsafe_allow_html=True)
+if st.session_state.last_answer:
+    st.markdown("### Buddy says")
+    st.markdown(f'<div class="response-card">{st.session_state.last_answer}</div>', unsafe_allow_html=True)
 
-        with st.expander("View source used"):
-            if st.session_state.last_chunks:
-                st.markdown(f'<div class="source-card">{st.session_state.last_chunks[0]}</div>', unsafe_allow_html=True)
+    with st.expander("View source used"):
+        if st.session_state.last_chunks:
+            st.markdown(f'<div class="source-card">{st.session_state.last_chunks[0]}</div>', unsafe_allow_html=True)
 
-    if st.session_state.last_followups:
-        st.caption("Suggested follow-ups:")
-        follow_cols = st.columns(3)
-        for i, followup in enumerate(st.session_state.last_followups):
-            if follow_cols[i].button(followup, use_container_width=True, key=f"followup_{i}_{followup[:8]}"):
-                st.session_state.selected_question = followup
-                st.rerun()
+if st.session_state.last_followups:
+    st.caption("Suggested follow-ups:")
+    follow_cols = st.columns(3)
+    for i, followup in enumerate(st.session_state.last_followups):
+        if follow_cols[i].button(followup, use_container_width=True, key=f"followup_{i}_{followup[:8]}"):
+            st.session_state.selected_question = followup
+            st.rerun()
