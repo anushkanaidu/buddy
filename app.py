@@ -160,32 +160,47 @@ p, label, span {
 }
 
 .hero-card {
-    padding: 1.45rem 1.65rem;
-    border-radius: 22px;
-    background: rgba(255,255,255,0.055);
-    border: 1px solid rgba(255,255,255,0.09);
-    margin-bottom: 1.1rem;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.18);
-    backdrop-filter: blur(14px);
+    padding: 1.55rem 1.7rem;
+    border-radius: 24px;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035));
+    border: 1px solid rgba(255,255,255,0.10);
+    margin-bottom: 1.05rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+    backdrop-filter: blur(16px);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-card::before {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -60px;
+    top: -70px;
+    background: radial-gradient(circle, rgba(107,161,118,0.25), transparent 65%);
 }
 
 .center-hero {
-    text-align: center;
+    text-align: left;
 }
 
 .hero-title {
     color: white;
-    font-size: 2.2rem;
+    font-size: 2.05rem;
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
     margin-bottom: 0.45rem;
+    position: relative;
 }
 
 .hero-subtitle {
     color: #f4f4f5;
-    font-size: 1.02rem;
+    font-size: 1rem;
     font-weight: 650;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.28rem;
+    position: relative;
 }
 
 .hero-copy {
@@ -194,12 +209,46 @@ p, label, span {
 }
 
 .focus-card {
-    padding: 0.85rem 1rem;
-    border-radius: 16px;
-    background: rgba(107,161,118,0.08);
-    border: 1px solid rgba(107,161,118,0.18);
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: rgba(107,161,118,0.085);
+    border: 1px solid rgba(107,161,118,0.20);
     margin-bottom: 1rem;
     backdrop-filter: blur(14px);
+}
+
+.status-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.9rem;
+    position: relative;
+}
+
+.status-pill {
+    background: rgba(107,161,118,0.14);
+    border: 1px solid rgba(107,161,118,0.28);
+    color: #dff5e5;
+    padding: 0.28rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.focus-pills {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.focus-pill {
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: #f4f4f5;
+    border-radius: 999px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.84rem;
 }
 
 .focus-title {
@@ -249,7 +298,8 @@ p, label, span {
     color: white !important;
     border: 1px solid rgba(255,255,255,0.13) !important;
     transition: 0.15s ease-in-out;
-    min-height: 2.5rem;
+    min-height: 2.45rem;
+    font-weight: 600 !important;
 }
 
 .stButton > button:hover {
@@ -354,16 +404,25 @@ with st.sidebar:
 # -----------------------------
 st.markdown("""
 <div class="hero-card center-hero">
-    <div class="hero-title">🤝 Buddy</div>
-    <div class="hero-subtitle">AI onboarding and HR assistant</div>
-    <div class="hero-copy">Ask about onboarding, HR policies, tools, training, or PTO.</div>
+    <div class="hero-title">Good to see you, Anushka 👋</div>
+    <div class="hero-subtitle">Buddy is ready to help with onboarding and HR questions.</div>
+    <div class="hero-copy">Ask about policies, tools, training, PTO, or your next onboarding step.</div>
+    <div class="status-row">
+        <div class="status-pill">Handbook connected</div>
+        <div class="status-pill">Day 1 onboarding</div>
+        <div class="status-pill">3 tasks pending</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="focus-card">
     <div class="focus-title">Current onboarding focus</div>
-    <div class="focus-line">AI Ethics Training · Tool Onboarding · First Project</div>
+    <div class="focus-pills">
+        <div class="focus-pill">AI Ethics Training</div>
+        <div class="focus-pill">Tool Onboarding</div>
+        <div class="focus-pill">First Project</div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -405,12 +464,12 @@ if query:
             client = Groq(api_key=api_key)
             prompt = f"""You are Buddy, a warm HR and onboarding assistant helping Anushka.
 Use the HR context below to answer accurately.
-Address Anushka by name when it feels natural, but do not overdo greetings.
+Start responses naturally with "Hi Anushka," when appropriate.
 Keep the response concise, professional, warm, and direct.
 Maximum 4-6 concise lines.
 Prefer bullet points when helpful.
 Avoid long explanations.
-Do not start every answer with Hello or Hi.
+Do not use overly long greetings or emotional language.
 If you do not know the answer, say so honestly and suggest reaching out to HR.
 
 HR Context:
