@@ -423,11 +423,6 @@ st.markdown("""
     <div class="hero-title">Good to see you, Anushka 👋</div>
     <div class="hero-subtitle">Buddy is ready to help with onboarding and HR questions.</div>
     <div class="hero-copy">Ask about policies, tools, training, PTO, or your next onboarding step.</div>
-    <div class="status-row">
-        <div class="status-pill">Handbook connected</div>
-        <div class="status-pill">Day 1 onboarding</div>
-        <div class="status-pill">3 tasks pending</div>
-    </div>
 </div>
 """, unsafe_allow_html=True)
 
