@@ -160,7 +160,7 @@ p, label, span {
 }
 
 .hero-card {
-    padding: 1.55rem 1.7rem;
+    padding: 1.35rem 1.55rem;
     border-radius: 24px;
     background:
         linear-gradient(135deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035));
@@ -264,7 +264,7 @@ p, label, span {
 }
 
 .response-card {
-    background: rgba(255,255,255,0.94);
+    background: rgba(248,250,252,0.95);
     color: #111827;
     padding: 0.9rem 1rem;
     border-radius: 16px;
@@ -333,19 +333,35 @@ def query_vector_db(chunks, matrix, model, query, n_results=3):
     return [chunks[i] for i in top_indices]
 
 def source_label(query, chunks):
-    text = (query + " " + " ".join(chunks)).lower()
-    if any(word in text for word in ["pto", "paid time off", "leave"]):
-        return "PTO Policy section"
-    if any(word in text for word in ["training", "ethics", "harassment", "tool onboarding"]):
-        return "Mandatory Training section"
-    if any(word in text for word in ["slack", "asana", "figma", "gemini", "workspace", "tool"]):
-        return "Tools section"
-    if any(word in text for word in ["it support", "hardware", "access"]):
-        return "IT Support section"
-    if any(word in text for word in ["1-on-1", "manager", "friday"]):
+    """Choose a clean source label. Query intent gets priority so labels don't get confused by mixed retrieved chunks."""
+    q = query.lower()
+    chunk_text = " ".join(chunks).lower()
+
+    if any(word in q for word in ["1-on-1", "one on one", "manager", "friday", "meeting"]):
         return "1-on-1s section"
-    if any(word in text for word in ["bgv", "background", "verification"]):
+    if any(word in q for word in ["pto", "paid time off", "leave", "vacation"]):
+        return "PTO Policy section"
+    if any(word in q for word in ["training", "ethics", "harassment", "tool onboarding"]):
+        return "Mandatory Training section"
+    if any(word in q for word in ["slack", "asana", "figma", "gemini", "workspace", "tool"]):
+        return "Tools section"
+    if any(word in q for word in ["it support", "hardware", "access"]):
+        return "IT Support section"
+    if any(word in q for word in ["bgv", "background", "verification"]):
         return "Background Verification section"
+
+    # fallback to retrieved context only if the query is broad
+    if "1-on-1" in chunk_text or "friday" in chunk_text:
+        return "1-on-1s section"
+    if "pto" in chunk_text or "paid time off" in chunk_text:
+        return "PTO Policy section"
+    if "mandatory training" in chunk_text or "ai ethics" in chunk_text:
+        return "Mandatory Training section"
+    if "slack" in chunk_text or "asana" in chunk_text or "figma" in chunk_text:
+        return "Tools section"
+    if "bgv" in chunk_text or "background verification" in chunk_text:
+        return "Background Verification section"
+
     return "Onboarding Policy section"
 
 # -----------------------------
@@ -397,7 +413,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.divider()
-    st.caption("Simple AI onboarding assistant")
+    st.caption("Built with RAG + Groq")
 
 # -----------------------------
 # Main app
