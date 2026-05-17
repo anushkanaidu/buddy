@@ -240,6 +240,18 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&display=swap');
 
+:root {
+    --bg: #111111;
+    --panel: #171717;
+    --panel-soft: #1c1c1c;
+    --border: #2a2a2a;
+    --text: #f3f4f6;
+    --muted: #a3a3a3;
+    --subtle: #737373;
+    --accent: #6b9e78;
+    --accent-soft: rgba(107,158,120,0.16);
+}
+
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"],
@@ -247,111 +259,97 @@ html, body,
 .main, .block-container,
 [data-testid="stVerticalBlock"],
 [data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #F7F5F2 !important;
+    background:
+        radial-gradient(circle at top left, rgba(107,158,120,0.10), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(230,190,120,0.05), transparent 28%),
+        var(--bg) !important;
 }
 
 html, body, p, div, span, label,
 [class*="css"], .stMarkdown, li {
     font-family: 'DM Sans', sans-serif !important;
-    color: #1a1a1a;
+    color: var(--text);
 }
 
 #MainMenu, footer, header,
 [data-testid="stToolbar"],
 [data-testid="stDecoration"] { visibility: hidden; height: 0; }
 
-.block-container { padding: 2rem 2.5rem 3rem !important; max-width: 100% !important; }
+.block-container {
+    padding: 2rem 2.5rem 7rem !important;
+    max-width: 100% !important;
+}
 
-/* ── Sidebar ── */
+/* Sidebar */
 [data-testid="stSidebar"] {
-    background-color: #EFECE8 !important;
-    border-right: 1px solid #DDD9D3 !important;
+    background-color: #0f0f0f !important;
+    border-right: 1px solid var(--border) !important;
 }
-[data-testid="stSidebar"] * { color: #1a1a1a !important; }
-[data-testid="stSidebar"] > div { padding-top: 1.2rem !important; }
-[data-testid="stSidebar"] .stSelectbox > div > div {
-    background: #FFFFFF !important;
-    border: 1px solid #DDD9D3 !important;
-    border-radius: 8px !important;
+[data-testid="stSidebar"] * { color: var(--text) !important; }
+[data-testid="stSidebar"] > div { padding-top: 1.1rem !important; }
+[data-testid="stSidebar"] .stSelectbox > div > div,
+[data-testid="stSelectbox"] > div > div {
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
 }
+[data-testid="stSidebar"] .stRadio { margin-top: .55rem !important; }
 [data-testid="stSidebar"] .stRadio label { font-size: 0.875rem !important; }
 [data-testid="stSidebar"] .stCheckbox label { font-size: 0.82rem !important; }
+[data-testid="stSidebar"] input[type="checkbox"] { accent-color: var(--accent) !important; }
 
-/* ── Text input ── */
-.stTextInput > div > div > input {
-    background-color: #FFFFFF !important;
-    color: #1a1a1a !important;
-    border: 1.5px solid #DDD9D3 !important;
-    border-radius: 10px !important;
-    padding: 0.7rem 1rem !important;
-    font-size: 0.9rem !important;
-    font-family: 'DM Sans', sans-serif !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: #6b9e78 !important;
-    box-shadow: 0 0 0 3px rgba(107,158,120,0.15) !important;
-}
-.stTextInput > div > div > input::placeholder { color: #bbb !important; }
-
-/* ── Buttons ── */
+/* Buttons / chips */
 .stButton > button {
-    background-color: #FFFFFF !important;
-    color: #1a1a1a !important;
-    border: 1px solid #DDD9D3 !important;
-    border-radius: 20px !important;
+    background-color: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 999px !important;
     font-family: 'DM Sans', sans-serif !important;
-    font-size: 0.82rem !important;
+    font-size: 0.78rem !important;
     font-weight: 500 !important;
-    transition: all 0.15s !important;
+    padding: 0.42rem 0.75rem !important;
+    transition: all 0.15s ease !important;
 }
 .stButton > button:hover {
-    background-color: #f0f7f2 !important;
-    border-color: #6b9e78 !important;
-    color: #2d5a38 !important;
+    background-color: var(--accent-soft) !important;
+    border-color: var(--accent) !important;
+    color: #d8f3df !important;
 }
 
-/* ── Progress bar ── */
-.stProgress > div > div > div > div { background-color: #6b9e78 !important; }
-.stProgress > div > div > div { background-color: #E5E0D8 !important; }
+/* Progress bar */
+.stProgress > div > div > div > div { background-color: var(--accent) !important; }
+.stProgress > div > div > div { background-color: #2a2a2a !important; }
 
-/* ── Expander ── */
+/* Expander */
 [data-testid="stExpander"] {
-    background-color: #FFFFFF !important;
-    border: 1px solid #E5E0D8 !important;
-    border-radius: 10px !important;
-    margin-top: 0.25rem !important;
+    background-color: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+    margin-top: 0.4rem !important;
 }
 [data-testid="stExpander"] summary {
-    font-size: 0.82rem !important;
-    color: #6b9e78 !important;
+    font-size: 0.8rem !important;
+    color: #b9e2c2 !important;
     font-weight: 500 !important;
 }
 
-/* ── Selectbox ── */
-[data-testid="stSelectbox"] > div > div {
-    background-color: #FFFFFF !important;
-    border: 1px solid #DDD9D3 !important;
-    border-radius: 8px !important;
-    color: #1a1a1a !important;
-}
-
-/* ── Spinner text ── */
+/* Spinner */
 [data-testid="stSpinner"] p {
     font-size: 0.85rem !important;
-    color: #888 !important;
+    color: var(--muted) !important;
 }
 
-/* ── Timeline ── */
+/* Timeline */
 .timeline-wrap {
     display: flex;
     align-items: flex-start;
     gap: 0;
     overflow-x: auto;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.15rem;
 }
 .timeline-step {
     flex: 1;
-    min-width: 80px;
+    min-width: 78px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -361,60 +359,72 @@ html, body, p, div, span, label,
     content: '';
     position: absolute;
     top: 14px;
-    left: 50%;
-    width: 100%;
+    left: calc(50% + 14px);
+    width: calc(100% - 28px);
     height: 2px;
     z-index: 0;
 }
-.timeline-step.done::after    { background: #6b9e78; }
-.timeline-step.active::after  { background: #E5E0D8; }
-.timeline-step.upcoming::after{ background: #E5E0D8; }
+.timeline-step.done::after { background: var(--accent); }
+.timeline-step.active::after,
+.timeline-step.upcoming::after { background: #333333; }
 
 .timeline-dot {
     width: 28px; height: 28px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     position: relative; z-index: 1; flex-shrink: 0;
 }
-.timeline-dot.done    { background:#6b9e78; border:2px solid #6b9e78; color:white; font-size:0.65rem; }
-.timeline-dot.active  { background:#FFFFFF; border:2.5px solid #6b9e78; color:#6b9e78; font-size:0.8rem; box-shadow:0 0 0 4px rgba(107,158,120,0.15); }
-.timeline-dot.upcoming{ background:#FFFFFF; border:2px solid #D5D0CA; color:#aaa; font-size:0.75rem; }
+.timeline-dot.done { background:var(--accent); border:2px solid var(--accent); color:white; font-size:0.65rem; }
+.timeline-dot.active { background:#111111; border:2.5px solid var(--accent); color:#d8f3df; font-size:0.78rem; box-shadow:0 0 0 4px rgba(107,158,120,0.14); }
+.timeline-dot.upcoming { background:#171717; border:2px solid #3a3a3a; color:#a3a3a3; font-size:0.74rem; }
 
 .timeline-label {
-    margin-top: 0.4rem; font-size: 0.65rem; font-weight: 600;
-    text-align: center; line-height: 1.3;
+    margin-top: 0.38rem; font-size: 0.63rem; font-weight: 600;
+    text-align: center; line-height: 1.25;
 }
-.timeline-label.done    { color: #6b9e78; }
-.timeline-label.active  { color: #1a1a1a; }
-.timeline-label.upcoming{ color: #bbb; }
+.timeline-label.done { color: #9dc9a6; }
+.timeline-label.active { color: var(--text); }
+.timeline-label.upcoming { color: #6f6f6f; }
 
-.timeline-sub { font-size:0.6rem; color:#bbb; text-align:center; margin-top:0.1rem; }
-.timeline-sub.active { color:#888; }
+.timeline-sub { font-size:0.58rem; color:#666; text-align:center; margin-top:0.08rem; }
+.timeline-sub.active { color:#9a9a9a; }
 
-/* ── Chat message max-width — FIX: was 18% margin, now capped at 680px ── */
-.msg-user-wrap {
-    max-width: 680px;
-    margin-left: auto;
-    margin-right: 0;
+/* Native Streamlit chat — keep it simple and aligned */
+[data-testid="stChatMessage"] {
+    background: transparent !important;
+    padding: 0.35rem 0 !important;
 }
-.msg-buddy-wrap {
-    max-width: 680px;
-    margin-left: 0;
-    margin-right: auto;
+[data-testid="stChatMessageContent"] {
+    max-width: 760px !important;
 }
+[data-testid="stChatInput"] {
+    background: rgba(17,17,17,0.96) !important;
+    border-top: 1px solid var(--border) !important;
+}
+[data-testid="stChatInput"] textarea {
+    background-color: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 14px !important;
+}
+[data-testid="stChatInput"] textarea::placeholder { color: #777 !important; }
 
-/* ── Pill label for recommendations / starters ── */
+/* Pill label */
 .pill-label {
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #aaa;
-    font-weight: 600;
+    letter-spacing: 0.09em;
+    color: #777;
+    font-weight: 700;
     margin-bottom: 0.35rem;
-    margin-top: 0.6rem;
+    margin-top: 0.9rem;
     display: block;
 }
+
+/* Keep Markdown text readable */
+h1, h2, h3, h4 { color: var(--text) !important; }
+small, .caption { color: var(--muted) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -468,18 +478,18 @@ with st.sidebar:
     <div style="padding:0.2rem 0 1.2rem;">
         <span style="font-size:1.4rem;">🤝</span>
         <span style="font-family:'DM Serif Display',serif; font-size:1.15rem; margin-left:0.4rem;">Buddy</span>
-        <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:#999; margin-top:0.1rem;">HR Assistant</div>
+        <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:#8a8a8a; margin-top:0.1rem;">HR Assistant</div>
     </div>
     """, unsafe_allow_html=True)
 
     # Static, believable metadata
     st.markdown("""
-    <div style="background:#FFFFFF; border:1px solid #DDD9D3; border-radius:8px; padding:0.6rem 0.75rem; margin-bottom:1rem;">
+    <div style="background:#171717; border:1px solid #2a2a2a; border-radius:8px; padding:0.6rem 0.75rem; margin-bottom:1rem;">
         <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.3rem;">
             <span style="width:7px; height:7px; background:#22c55e; border-radius:50%; display:inline-block; flex-shrink:0;"></span>
-            <span style="font-size:0.75rem; font-weight:600; color:#1a1a1a;">All systems operational</span>
+            <span style="font-size:0.75rem; font-weight:600; color:#f3f4f6;">All systems operational</span>
         </div>
-        <div style="font-size:0.7rem; color:#888; line-height:1.7;">
+        <div style="font-size:0.7rem; color:#a8a8a8; line-height:1.7;">
             HR Handbook v2.1 · 12 policies indexed<br>
             Knowledge base updated May 2026<br>
             Responses grounded in verified documents
@@ -487,7 +497,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin-bottom:0.35rem;'>Viewing as</div>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin-bottom:0.35rem;'>Viewing as</div>", unsafe_allow_html=True)
     selected_name = st.selectbox("Employee", list(EMPLOYEES.keys()), label_visibility="collapsed")
     emp = EMPLOYEES[selected_name]
 
@@ -498,7 +508,7 @@ with st.sidebar:
     st.markdown(f"""
     <div style="margin:0.8rem 0 0.9rem;">
         <div style="font-weight:600; font-size:0.98rem;">{selected_name}</div>
-        <div style="font-size:0.8rem; color:#777; margin-top:0.12rem;">{emp['role']} · Day {emp['day']} · {emp['region']}</div>
+        <div style="font-size:0.8rem; color:#a3a3a3; margin-top:0.12rem;">{emp['role']} · Day {emp['day']} · {emp['region']}</div>
         <div style="margin-top:0.45rem;">
             <span style="display:inline-block; padding:2px 9px; border-radius:100px; font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; {badge_css}">{emp['status']}</span>
         </div>
@@ -510,31 +520,31 @@ with st.sidebar:
     live_done = len(emp["done"]) + checked_count
     live_progress = int((live_done / total_tasks) * 100) if total_tasks > 0 else emp["progress"]
 
-    st.markdown(f"""<div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin-bottom:0.25rem;">
-        Onboarding <span style="float:right; text-transform:none; letter-spacing:0; font-size:0.78rem; color:#1a1a1a; font-weight:600;">{live_progress}%</span>
+    st.markdown(f"""<div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin-bottom:0.25rem;">
+        Onboarding <span style="float:right; text-transform:none; letter-spacing:0; font-size:0.78rem; color:#f3f4f6; font-weight:600;">{live_progress}%</span>
     </div>""", unsafe_allow_html=True)
     st.progress(live_progress / 100)
 
     st.markdown(f"""
     <div style="display:flex; gap:0.5rem; margin:0.75rem 0 0.9rem;">
-        <div style="flex:1; background:#fff; border:1px solid #DDD9D3; border-radius:8px; padding:0.5rem 0.65rem;">
-            <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:#aaa; font-weight:600;">Stage</div>
+        <div style="flex:1; background:#171717; border:1px solid #2a2a2a; border-radius:8px; padding:0.5rem 0.65rem;">
+            <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:#777; font-weight:600;">Stage</div>
             <div style="font-size:0.78rem; font-weight:600; margin-top:0.08rem;">{emp['stage']}</div>
         </div>
-        <div style="flex:1; background:#fff; border:1px solid #DDD9D3; border-radius:8px; padding:0.5rem 0.65rem;">
-            <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:#aaa; font-weight:600;">BGV</div>
+        <div style="flex:1; background:#171717; border:1px solid #2a2a2a; border-radius:8px; padding:0.5rem 0.65rem;">
+            <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.08em; color:#777; font-weight:600;">BGV</div>
             <div style="font-size:0.78rem; font-weight:600; margin-top:0.08rem; color:{'#2d7a4f' if emp['bgv']=='Verified' else '#b45309'};">{emp['bgv']}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
     if emp["done"]:
-        st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin-bottom:0.25rem;'>✓ Completed</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin-bottom:0.25rem;'>✓ Completed</div>", unsafe_allow_html=True)
         for item in emp["done"]:
-            st.markdown(f"<div style='font-size:0.8rem; color:#aaa; padding:2px 0; text-decoration:line-through;'>{item}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:0.8rem; color:#777; padding:2px 0; text-decoration:line-through;'>{item}</div>", unsafe_allow_html=True)
 
     if emp["todo"]:
-        st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin:0.65rem 0 0.3rem;'>◦ To do</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin:0.65rem 0 0.3rem;'>◦ To do</div>", unsafe_allow_html=True)
         all_done_before = all(st.session_state.master_tasks[selected_name].get(t, False) for t in emp["todo"])
         for task in emp["todo"]:
             checked = st.checkbox(task, value=st.session_state.master_tasks[selected_name].get(task, False), key=f"cb_{selected_name}_{task}")
@@ -544,7 +554,7 @@ with st.sidebar:
             st.balloons()
             st.success("All tasks complete! 🎉")
 
-    st.markdown("<hr style='border:none; border-top:1px solid #DDD9D3; margin:1rem 0 0.6rem;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border:none; border-top:1px solid #2a2a2a; margin:1rem 0 0.6rem;'>", unsafe_allow_html=True)
     view_mode = st.radio("View", ["Employee Portal", "HR Manager View"], label_visibility="collapsed")
     st.markdown("<div style='height:0.4rem;'></div>", unsafe_allow_html=True)
     if st.button("🗑 Clear chat", use_container_width=True):
@@ -562,7 +572,7 @@ if view_mode == "HR Manager View":
     st.markdown("""
     <div style="margin-bottom:1.5rem;">
         <div style="font-family:'DM Serif Display',serif; font-size:1.9rem; line-height:1.2;">Manager Dashboard</div>
-        <div style="font-size:0.83rem; color:#888; margin-top:0.25rem;">Onboarding overview · All employees</div>
+        <div style="font-size:0.83rem; color:#a8a8a8; margin-top:0.25rem;">Onboarding overview · All employees</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -585,14 +595,14 @@ if view_mode == "HR Manager View":
         (c4, overdue,       "Overdue",      "action required"),
     ]:
         col.markdown(f"""
-        <div style="background:#FFFFFF; border:1px solid #E5E0D8; border-radius:12px; padding:1.2rem; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div style="background:#171717; border:1px solid #2a2a2a; border-radius:12px; padding:1.2rem; text-align:center; box-shadow:none;">
             <div style="font-family:'DM Serif Display',serif; font-size:2rem; line-height:1;">{val}</div>
             <div style="font-size:0.75rem; font-weight:600; margin-top:0.3rem;">{label}</div>
-            <div style="font-size:0.7rem; color:#aaa;">{sub}</div>
+            <div style="font-size:0.7rem; color:#777;">{sub}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("<div style='margin-top:2rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin-bottom:0.7rem;'>Employees</div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:2rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin-bottom:0.7rem;'>Employees</div>", unsafe_allow_html=True)
 
     for name, e in EMPLOYEES.items():
         bc = BADGE.get(e["status"], "background:#eee;")
@@ -602,7 +612,7 @@ if view_mode == "HR Manager View":
             with col1:
                 st.progress(display_progress / 100, text=f"{display_progress}% complete")
                 if e["todo"]:
-                    st.markdown(f"<div style='font-size:0.78rem; color:#888; margin-top:0.15rem;'>Pending: {', '.join(e['todo'])}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:0.78rem; color:#a8a8a8; margin-top:0.15rem;'>Pending: {', '.join(e['todo'])}</div>", unsafe_allow_html=True)
             with col2:
                 st.markdown(f"<span style='display:inline-block; padding:2px 9px; border-radius:100px; font-size:0.68rem; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; {bc}'>{e['status']}</span>", unsafe_allow_html=True)
             with col3:
@@ -621,9 +631,9 @@ else:
     # ── Hero — FIX: more vertical breathing room ──────────────────────────────
     st.markdown(f"""
     <div style="margin-bottom:1.8rem; padding-top:0.5rem;">
-        <div style="font-family:'DM Serif Display',serif; font-size:2.4rem; line-height:1.1; color:#1a1a1a;">Buddy</div>
-        <div style="font-size:1.05rem; color:#555; font-weight:500; margin-top:0.35rem;">Your AI workplace assistant</div>
-        <div style="font-size:0.85rem; color:#999; margin-top:0.3rem; max-width:500px; line-height:1.55;">
+        <div style="font-family:'DM Serif Display',serif; font-size:2.4rem; line-height:1.1; color:#f3f4f6;">Buddy</div>
+        <div style="font-size:1.05rem; color:#c9c9c9; font-weight:500; margin-top:0.35rem;">Your AI workplace assistant</div>
+        <div style="font-size:0.85rem; color:#8a8a8a; margin-top:0.3rem; max-width:500px; line-height:1.55;">
             Get instant answers on onboarding, HR policies, compliance, and workplace tools.
         </div>
     </div>
@@ -648,8 +658,8 @@ else:
         </div>"""
 
     st.markdown(f"""
-    <div style="background:#FFFFFF; border:1px solid #E5E0D8; border-radius:14px; padding:1rem 1.4rem 1.1rem; margin-bottom:1.2rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-        <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#999; font-weight:600; margin-bottom:0.75rem;">
+    <div style="background:#171717; border:1px solid #2a2a2a; border-radius:14px; padding:1rem 1.4rem 1.1rem; margin-bottom:1.2rem; box-shadow:0 12px 28px rgba(0,0,0,0.25);">
+        <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#8a8a8a; font-weight:600; margin-bottom:0.75rem;">
             Onboarding Journey &nbsp;·&nbsp; <span style="color:#6b9e78; text-transform:none; letter-spacing:0;">{emp['stage']}</span>
         </div>
         <div class="timeline-wrap">{dots_html}</div>
@@ -658,14 +668,14 @@ else:
 
     # ── Greeting card ─────────────────────────────────────────────────────────
     st.markdown(f"""
-    <div style="background:#FFFFFF; border:1px solid #E5E0D8; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.2rem; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+    <div style="background:#171717; border:1px solid #2a2a2a; border-radius:14px; padding:1.2rem 1.5rem; margin-bottom:1.2rem; box-shadow:0 12px 28px rgba(0,0,0,0.25);">
         <div style="font-family:'DM Serif Display',serif; font-size:1.4rem; line-height:1.25;">
             Hey, {first_name}. {status_icon}
         </div>
-        <div style="font-size:0.8rem; color:#888; margin-top:0.25rem;">
+        <div style="font-size:0.8rem; color:#a8a8a8; margin-top:0.25rem;">
             Day {emp['day']} &nbsp;·&nbsp; {emp['stage']} &nbsp;·&nbsp; {live_progress}% complete
         </div>
-        <div style="margin-top:0.7rem; border-left:3px solid #6b9e78; padding-left:0.8rem; font-size:0.87rem; color:#444; font-style:italic; line-height:1.5;">
+        <div style="margin-top:0.7rem; border-left:3px solid #6b9e78; padding-left:0.8rem; font-size:0.87rem; color:#d7d7d7; font-style:italic; line-height:1.5;">
             {nudge}
         </div>
     </div>
@@ -673,9 +683,9 @@ else:
 
     # ── Deadline warning ──────────────────────────────────────────────────────
     if emp.get("deadline_warning"):
-        warn_color  = "#991b1b" if emp["status"] == "Overdue" else "#92400e"
-        warn_bg     = "#fee2e2" if emp["status"] == "Overdue" else "#fef3c7"
-        warn_border = "#fca5a5" if emp["status"] == "Overdue" else "#fcd34d"
+        warn_color  = "#fca5a5" if emp["status"] == "Overdue" else "#fbbf24"
+        warn_bg     = "rgba(248,113,113,0.08)" if emp["status"] == "Overdue" else "rgba(251,191,36,0.08)"
+        warn_border = "rgba(248,113,113,0.35)" if emp["status"] == "Overdue" else "rgba(251,191,36,0.35)"
         st.markdown(f"""
         <div style="background:{warn_bg}; border:1px solid {warn_border}; border-radius:10px; padding:0.75rem 1rem; margin-bottom:1.1rem; display:flex; align-items:flex-start; gap:0.6rem;">
             <span style="font-size:1rem; flex-shrink:0;">{'🔴' if emp['status']=='Overdue' else '⚠️'}</span>
@@ -696,7 +706,7 @@ else:
     recommendations = st.session_state.all_recommendations[selected_name]
 
     # ── Preloaded welcome message ─────────────────────────────────────────────
-    if not chat_history:
+    if len(chat_history) == 0:
         pending_str = ", ".join(emp["todo"]) if emp["todo"] else "nothing — you're all caught up!"
         welcome = (
             f"Hi {first_name} 👋  I can help with onboarding, HR policies, PTO, "
@@ -709,56 +719,21 @@ else:
     # ── Chat history ──────────────────────────────────────────────────────────
     for i, msg in enumerate(chat_history):
         ts = msg_timestamps.get(i, "")
+        role = "user" if msg["role"] == "user" else "assistant"
 
-        if msg["role"] == "user":
-            st.markdown(f"""
-            <div style="margin:0.6rem 0 0.15rem;">
-                <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#bbb; font-weight:600; margin-bottom:0.2rem;">
-                    You <span style="font-weight:400; text-transform:none; letter-spacing:0;">{ts}</span>
-                </div>
-                <div class="msg-user-wrap">
-                    <div style="background:#6b9e78; color:#fff; border-radius:14px 14px 4px 14px; padding:0.75rem 1rem; font-size:0.9rem; line-height:1.55;">
-                        {msg['content']}
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        with st.chat_message(role):
+            st.caption(("You" if role == "user" else "Buddy") + (f" · {ts}" if ts else ""))
+            st.markdown(msg["content"])
 
-        else:
-            source_section = source_sections.get(i, "")
-            inline_source = ""
-            if i > 0 and source_section:
-                inline_source = f"""
-                <div style="margin-top:0.7rem; padding-top:0.55rem; border-top:1px solid #F0EDE8; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                    <span style="font-size:0.68rem; color:#6b9e78; font-weight:600;">Source</span>
-                    <span style="font-size:0.68rem; color:#888;">HR Handbook v2.1 → {source_section}</span>
-                    <span style="font-size:0.68rem; background:#f0f7f2; border:1px solid #c8dece; border-radius:100px; padding:1px 8px; color:#6b9e78; font-weight:500;">Confidence: High</span>
-                </div>
-                """
+            if role == "assistant":
+                source_section = source_sections.get(i, "")
+                if i > 0 and source_section:
+                    st.caption(f"Source: HR Handbook v2.1 → {source_section} · Confidence: High")
 
-            st.markdown(f"""
-            <div style="margin:0.15rem 0 0.5rem;">
-                <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#bbb; font-weight:600; margin-bottom:0.2rem;">
-                    Buddy <span style="font-weight:400; text-transform:none; letter-spacing:0;">{ts}</span>
-                </div>
-                <div class="msg-buddy-wrap">
-                    <div style="background:#FFFFFF; border:1px solid #E5E0D8; border-radius:14px 14px 14px 4px; padding:0.85rem 1.1rem; font-size:0.9rem; line-height:1.6; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                        {msg['content']}
-                        {inline_source}
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Source expander still available for full chunks
-            if i > 0 and i in source_chunks:
-                with st.expander("View full source excerpt"):
-                    for chunk in source_chunks[i]:
-                        st.markdown(f"""
-                        <div style="background:#f0f7f2; border-left:3px solid #6b9e78; border-radius:6px; padding:0.55rem 0.8rem; font-size:0.8rem; color:#333; margin-bottom:0.35rem; line-height:1.5;">
-                            {chunk}
-                        </div>
-                        """, unsafe_allow_html=True)
+                if i > 0 and i in source_chunks:
+                    with st.expander("View full source excerpt"):
+                        for chunk in source_chunks[i]:
+                            st.markdown(chunk)
 
     # ── AI Recommendations — FIX: "Suggested follow-ups" label, pill styling ─
     if recommendations:
