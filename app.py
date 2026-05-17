@@ -1,3 +1,4 @@
+import html
 import numpy as np
 import streamlit as st
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -25,26 +26,13 @@ Mandatory Training: All employees must complete Harassment Policy, AI Ethics, an
 Onboarding Stages: Intake, IT Setup, Orientation, Meet Your Team, Training, First Project, 30-Day Check-in, 90-Day Review.
 """
 
-employees_stats = [
-    {"name": "Anushka Naidu", "role": "UX Strategist", "progress": 20, "status": "At Risk"},
-    {"name": "Marcus Lee", "role": "Copywriter", "progress": 60, "status": "On Track"},
-    {"name": "Priya Sharma", "role": "Account Manager", "progress": 40, "status": "On Track"},
-    {"name": "Jordan Kim", "role": "Designer", "progress": 85, "status": "Overdue"},
-]
-
-task_list = [
-    "Complete AI Ethics Training",
-    "Finish Tool Onboarding",
-    "Prepare for first 1-on-1",
-]
-
 # -----------------------------
 # Page setup
 # -----------------------------
 st.set_page_config(page_title="Buddy", page_icon="🤝", layout="wide")
 
 # -----------------------------
-# CSS polish
+# CSS
 # -----------------------------
 st.markdown("""
 <style>
@@ -56,8 +44,8 @@ html, body, [class*="css"] {
 
 [data-testid="stAppViewContainer"] {
     background:
-        radial-gradient(circle at top left, rgba(107,161,118,0.20), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(96,165,250,0.12), transparent 30%),
+        radial-gradient(circle at top left, rgba(107,161,118,0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(96,165,250,0.11), transparent 30%),
         linear-gradient(135deg, #0f1117 0%, #12151f 45%, #171a24 100%) !important;
 }
 
@@ -66,11 +54,11 @@ html, body, [class*="css"] {
 }
 
 .block-container {
-    max-width: 900px;
+    max-width: 880px;
     padding-top: 4rem;
 }
 
-/* cleaner sidebar */
+/* Sidebar */
 [data-testid="stSidebar"] {
     background: rgba(24, 26, 36, 0.96) !important;
     border-right: 1px solid rgba(255,255,255,0.08);
@@ -78,14 +66,6 @@ html, body, [class*="css"] {
 
 [data-testid="stSidebar"] * {
     color: #f4f4f5;
-}
-
-[data-testid="stSidebar"] .stRadio label {
-    font-size: 0.92rem !important;
-}
-
-.sidebar-logo {
-    padding: 0.3rem 0 1rem 0;
 }
 
 .sidebar-title {
@@ -153,9 +133,10 @@ html, body, [class*="css"] {
     margin: 0.28rem 0;
 }
 
+/* Main */
 h1 {
     color: white !important;
-    font-size: 2.6rem !important;
+    font-size: 2.45rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.03em;
 }
@@ -173,15 +154,35 @@ p, label, span {
 }
 
 .hero-card {
-    padding: 1.5rem 1.7rem;
+    padding: 1.45rem 1.65rem;
     border-radius: 22px;
     background: rgba(255,255,255,0.055);
     border: 1px solid rgba(255,255,255,0.09);
-    margin-bottom: 1.2rem;
+    margin-bottom: 1.1rem;
     box-shadow: 0 20px 50px rgba(0,0,0,0.18);
 }
 
-.task-card {
+.hero-title {
+    color: white;
+    font-size: 2.15rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.45rem;
+}
+
+.hero-subtitle {
+    color: #f4f4f5;
+    font-size: 1.02rem;
+    font-weight: 650;
+    margin-bottom: 0.25rem;
+}
+
+.hero-copy {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+}
+
+.focus-card {
     padding: 0.85rem 1rem;
     border-radius: 16px;
     background: rgba(107,161,118,0.08);
@@ -189,40 +190,32 @@ p, label, span {
     margin-bottom: 1rem;
 }
 
-.task-title {
+.focus-title {
     color: white;
     font-weight: 700;
     font-size: 0.95rem;
     margin-bottom: 0.35rem;
 }
 
-.task-line {
+.focus-line {
     color: #c9cbd1;
     font-size: 0.86rem;
-    margin: 0.18rem 0;
 }
 
 .response-card {
-    background: #ffffff;
+    background: rgba(255,255,255,0.94);
     color: #111827;
     padding: 1rem 1.2rem;
     border-radius: 16px;
-    margin-top: 1rem;
+    margin-top: 1.1rem;
     line-height: 1.6;
     box-shadow: 0 14px 35px rgba(0,0,0,0.22);
 }
 
-.response-card * {
-    color: #111827 !important;
-}
-
-.source-card {
-    padding: 0.75rem 0.9rem;
-    border-left: 4px solid #6ba176;
-    background: rgba(107,161,118,0.12);
-    border-radius: 10px;
-    margin-top: 0.8rem;
-    font-size: 0.85rem;
+.source-line {
+    color: #a1a1aa;
+    font-size: 0.82rem;
+    margin-top: 0.55rem;
 }
 
 .stTextInput input {
@@ -243,31 +236,13 @@ p, label, span {
     color: white !important;
     border: 1px solid rgba(255,255,255,0.13) !important;
     transition: 0.15s ease-in-out;
+    min-height: 2.5rem;
 }
 
 .stButton > button:hover {
     border-color: #6ba176 !important;
     background: rgba(107,161,118,0.20) !important;
-}
-
-[data-testid="stMetric"] {
-    background: rgba(255,255,255,0.055);
-    padding: 1rem;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.09);
-}
-
-[data-testid="stExpander"] {
-    background: rgba(255,255,255,0.045) !important;
-    border: 1px solid rgba(255,255,255,0.09) !important;
-    border-radius: 14px !important;
-}
-
-/* make default info/warning boxes less loud in sidebar */
-[data-testid="stSidebar"] [data-testid="stAlert"] {
-    background: rgba(255,255,255,0.06) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    border-radius: 14px !important;
+    transform: translateY(-1px);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -282,29 +257,33 @@ def cosine_similarity(query_vec, matrix):
 
 @st.cache_resource(show_spinner=False)
 def build_vector_db(text_data):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = text_splitter.split_text(text_data)
-    embeddings_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    embedded_chunks = np.array(embeddings_model.embed_documents(chunks))
-    return chunks, embedded_chunks, embeddings_model
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    chunks = splitter.split_text(text_data)
+    model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    matrix = np.array(model.embed_documents(chunks))
+    return chunks, matrix, model
 
-def query_vector_db(chunks, embeddings_matrix, embeddings_model, query, n_results=3):
-    query_vec = np.array(embeddings_model.embed_query(query))
-    scores = cosine_similarity(query_vec, embeddings_matrix)
+def query_vector_db(chunks, matrix, model, query, n_results=3):
+    query_vec = np.array(model.embed_query(query))
+    scores = cosine_similarity(query_vec, matrix)
     top_indices = np.argsort(scores)[::-1][:n_results]
     return [chunks[i] for i in top_indices]
 
-def get_followups(query):
-    q = query.lower()
-    if "pto" in q or "leave" in q:
-        return ["How do I submit PTO?", "Can unused PTO carry over?", "Where is the HR Portal?"]
-    if "training" in q or "ethics" in q:
-        return ["What happens if I miss training?", "How long do I have to complete it?", "Where do I access training?"]
-    if "tool" in q or "slack" in q or "figma" in q:
-        return ["Who gives me tool access?", "What is Asana used for?", "Who do I contact for IT issues?"]
-    if "1-on-1" in q or "manager" in q:
-        return ["What should I prepare?", "How often are 1-on-1s?", "What should I ask my manager?"]
-    return ["What are my next onboarding steps?", "What trainings are pending?", "Who do I contact for IT help?"]
+def source_label(query, chunks):
+    text = (query + " " + " ".join(chunks)).lower()
+    if any(word in text for word in ["pto", "paid time off", "leave"]):
+        return "Employee Handbook · PTO Policy"
+    if any(word in text for word in ["training", "ethics", "harassment", "tool onboarding"]):
+        return "Employee Handbook · Mandatory Training"
+    if any(word in text for word in ["slack", "asana", "figma", "gemini", "workspace", "tool"]):
+        return "Employee Handbook · Tools"
+    if any(word in text for word in ["it support", "hardware", "access"]):
+        return "Employee Handbook · IT Support"
+    if any(word in text for word in ["1-on-1", "manager", "friday"]):
+        return "Employee Handbook · 1-on-1s"
+    if any(word in text for word in ["bgv", "background", "verification"]):
+        return "Employee Handbook · Background Verification"
+    return "Employee Handbook · Onboarding Policy"
 
 # -----------------------------
 # Secrets
@@ -320,22 +299,20 @@ api_key = st.secrets["GROQ_API_KEY"]
 # -----------------------------
 if "selected_question" not in st.session_state:
     st.session_state.selected_question = ""
+
 if "last_answer" not in st.session_state:
     st.session_state.last_answer = ""
-if "last_chunks" not in st.session_state:
-    st.session_state.last_chunks = []
-if "last_followups" not in st.session_state:
-    st.session_state.last_followups = []
+
+if "last_source" not in st.session_state:
+    st.session_state.last_source = ""
 
 # -----------------------------
 # Sidebar
 # -----------------------------
 with st.sidebar:
     st.markdown("""
-    <div class="sidebar-logo">
-        <div class="sidebar-title">🤝 Buddy</div>
-        <div class="sidebar-subtitle">HR Assistant</div>
-    </div>
+    <div class="sidebar-title">🤝 Buddy</div>
+    <div class="sidebar-subtitle">HR Assistant</div>
 
     <div class="sidebar-card">
         <div class="sidebar-name">Anushka Naidu</div>
@@ -349,32 +326,30 @@ with st.sidebar:
     st.markdown("""
     <div class="pending-card">
         <div class="pending-title">Pending tasks</div>
-        <div class="pending-item">• AI Ethics Training</div>
-        <div class="pending-item">• Tool Onboarding</div>
-        <div class="pending-item">• First Project</div>
+        <div class="pending-item">AI Ethics Training</div>
+        <div class="pending-item">Tool Onboarding</div>
+        <div class="pending-item">First Project</div>
     </div>
     """, unsafe_allow_html=True)
 
     st.divider()
-    st.caption("Built as a simple AI onboarding assistant.")
-    view_mode = "Employee Portal"
+    st.caption("Simple AI onboarding assistant")
 
 # -----------------------------
-# Employee Portal
+# Main app
 # -----------------------------
 st.markdown("""
 <div class="hero-card">
-    <h1>🤝 Buddy</h1>
-    <p style="font-size:1.05rem; font-weight:600; margin-bottom:0.25rem;">Your AI workplace assistant</p>
-    <p style="color:#a1a1aa;">Ask me anything about HR policies, onboarding, tools, training, or PTO.</p>
+    <div class="hero-title">Your AI workplace assistant</div>
+    <div class="hero-subtitle">Ask about onboarding, HR policies, tools, training, or PTO.</div>
+    <div class="hero-copy">Buddy uses the employee handbook to give quick, grounded answers.</div>
 </div>
 """, unsafe_allow_html=True)
 
-# Lightweight reminder card
 st.markdown("""
-<div class="task-card">
-    <div class="task-title">Current onboarding focus</div>
-    <div class="task-line">AI Ethics Training · Tool Onboarding · First Project</div>
+<div class="focus-card">
+    <div class="focus-title">Current onboarding focus</div>
+    <div class="focus-line">AI Ethics Training · Tool Onboarding · First Project</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -390,15 +365,15 @@ starters = [
 ]
 
 st.caption("Try asking:")
-cols = st.columns(4)
+cols = st.columns(len(starters))
 for i, question in enumerate(starters):
     if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
         st.session_state.selected_question = question
 
 query = st.text_input(
-    "Ask Buddy something:",
+    "Ask Buddy",
     value=st.session_state.selected_question,
-    placeholder="Example: What trainings do I need to complete?"
+    placeholder="Ask about PTO, onboarding, training..."
 )
 
 if query:
@@ -413,10 +388,12 @@ if query:
             context = "\n".join(top_chunks)
 
             client = Groq(api_key=api_key)
-            prompt = f"""You are Buddy, a warm and encouraging HR and compliance assistant.
-Use the HR context below to answer the employee question accurately.
-If you do not know the answer, say so honestly and suggest they reach out to their HR team.
-Be friendly, specific, and concise.
+            prompt = f"""You are Buddy, a warm HR and onboarding assistant.
+Use the HR context below to answer accurately.
+Keep the response concise, professional, warm, and direct.
+Avoid overly long supportive language.
+Maximum 3 short paragraphs.
+If you do not know the answer, say so honestly and suggest reaching out to HR.
 
 HR Context:
 {context}
@@ -430,26 +407,14 @@ Buddy Response:"""
                 messages=[{"role": "user", "content": prompt}],
             )
 
-            answer = response.choices[0].message.content
-            st.session_state.last_answer = answer
-            st.session_state.last_chunks = top_chunks
-            st.session_state.last_followups = get_followups(query)
+            st.session_state.last_answer = response.choices[0].message.content
+            st.session_state.last_source = source_label(query, top_chunks)
 
         except Exception as e:
             st.error(f"Buddy could not respond right now. Please try again. ({type(e).__name__})")
 
 if st.session_state.last_answer:
-    st.markdown("### Buddy says")
-    st.markdown(f'<div class="response-card">{st.session_state.last_answer}</div>', unsafe_allow_html=True)
-
-    with st.expander("View source used"):
-        if st.session_state.last_chunks:
-            st.markdown(f'<div class="source-card">{st.session_state.last_chunks[0]}</div>', unsafe_allow_html=True)
-
-if st.session_state.last_followups:
-    st.caption("Suggested follow-ups:")
-    follow_cols = st.columns(3)
-    for i, followup in enumerate(st.session_state.last_followups):
-        if follow_cols[i].button(followup, use_container_width=True, key=f"followup_{i}_{followup[:8]}"):
-            st.session_state.selected_question = followup
-            st.rerun()
+    safe_answer = html.escape(st.session_state.last_answer).replace("\n", "<br>")
+    safe_source = html.escape(st.session_state.last_source or "Employee Handbook")
+    st.markdown(f'<div class="response-card">{safe_answer}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="source-line">Source: {safe_source}</div>', unsafe_allow_html=True)
