@@ -32,13 +32,26 @@ employees_stats = [
     {"name": "Jordan Kim", "role": "Designer", "progress": 85, "status": "Overdue"},
 ]
 
+task_list = [
+    "Complete AI Ethics Training",
+    "Finish Tool Onboarding",
+    "Prepare for first 1-on-1",
+]
+
+quick_actions = [
+    "Request PTO",
+    "Contact IT",
+    "View onboarding checklist",
+    "Prepare for 1-on-1",
+]
+
 # -----------------------------
 # Page setup
 # -----------------------------
 st.set_page_config(page_title="Buddy", page_icon="🤝", layout="wide")
 
 # -----------------------------
-# Simple polish only
+# CSS polish
 # -----------------------------
 st.markdown("""
 <style>
@@ -49,7 +62,10 @@ html, body, [class*="css"] {
 }
 
 [data-testid="stAppViewContainer"] {
-    background: #0f1117;
+    background:
+        radial-gradient(circle at top left, rgba(107,161,118,0.20), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(96,165,250,0.12), transparent 30%),
+        linear-gradient(135deg, #0f1117 0%, #12151f 45%, #171a24 100%) !important;
 }
 
 [data-testid="stHeader"] {
@@ -61,12 +77,87 @@ html, body, [class*="css"] {
     padding-top: 4rem;
 }
 
+/* cleaner sidebar */
 [data-testid="stSidebar"] {
-    background: #24252f;
+    background: rgba(24, 26, 36, 0.96) !important;
+    border-right: 1px solid rgba(255,255,255,0.08);
 }
 
 [data-testid="stSidebar"] * {
     color: #f4f4f5;
+}
+
+[data-testid="stSidebar"] .stRadio label {
+    font-size: 0.92rem !important;
+}
+
+.sidebar-logo {
+    padding: 0.3rem 0 1rem 0;
+}
+
+.sidebar-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.1rem;
+}
+
+.sidebar-subtitle {
+    color: #a1a1aa;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.sidebar-card {
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 0.95rem;
+    margin: 1rem 0;
+}
+
+.sidebar-name {
+    color: white;
+    font-weight: 700;
+    font-size: 0.98rem;
+}
+
+.sidebar-meta {
+    color: #a1a1aa;
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+}
+
+.sidebar-small-label {
+    color: #a1a1aa;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.35rem;
+}
+
+.pending-card {
+    background: rgba(107,161,118,0.13);
+    border: 1px solid rgba(107,161,118,0.30);
+    border-radius: 16px;
+    padding: 0.85rem 0.95rem;
+    margin-top: 0.8rem;
+}
+
+.pending-title {
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.45rem;
+}
+
+.pending-item {
+    color: #d4d4d8;
+    font-size: 0.86rem;
+    margin: 0.28rem 0;
 }
 
 h1 {
@@ -90,19 +181,41 @@ p, label, span {
 
 .hero-card {
     padding: 1.5rem 1.7rem;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 22px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
     margin-bottom: 1.2rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+}
+
+.task-card {
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    margin-bottom: 1rem;
+}
+
+.task-title {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.task-line {
+    color: #d4d4d8;
+    font-size: 0.92rem;
+    margin: 0.25rem 0;
 }
 
 .response-card {
-    background: white;
+    background: #ffffff;
     color: #111827;
     padding: 1rem 1.2rem;
     border-radius: 16px;
     margin-top: 1rem;
     line-height: 1.6;
+    box-shadow: 0 14px 35px rgba(0,0,0,0.22);
 }
 
 .response-card * {
@@ -119,33 +232,46 @@ p, label, span {
 }
 
 .stTextInput input {
-    background: #282a36 !important;
+    background: rgba(40,42,54,0.95) !important;
     color: white !important;
     border-radius: 12px !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+.stTextInput input:focus {
+    border-color: #6ba176 !important;
+    box-shadow: 0 0 0 3px rgba(107,161,118,0.18) !important;
 }
 
 .stButton > button {
     border-radius: 999px !important;
-    background: rgba(255,255,255,0.06) !important;
+    background: rgba(255,255,255,0.07) !important;
     color: white !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.13) !important;
+    transition: 0.15s ease-in-out;
 }
 
 .stButton > button:hover {
     border-color: #6ba176 !important;
-    background: rgba(107,161,118,0.18) !important;
+    background: rgba(107,161,118,0.20) !important;
 }
 
 [data-testid="stMetric"] {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.055);
     padding: 1rem;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.09);
 }
 
 [data-testid="stExpander"] {
-    background: rgba(255,255,255,0.04) !important;
+    background: rgba(255,255,255,0.045) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    border-radius: 14px !important;
+}
+
+/* make default info/warning boxes less loud in sidebar */
+[data-testid="stSidebar"] [data-testid="stAlert"] {
+    background: rgba(255,255,255,0.06) !important;
     border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 14px !important;
 }
@@ -174,6 +300,18 @@ def query_vector_db(chunks, embeddings_matrix, embeddings_model, query, n_result
     top_indices = np.argsort(scores)[::-1][:n_results]
     return [chunks[i] for i in top_indices]
 
+def get_followups(query):
+    q = query.lower()
+    if "pto" in q or "leave" in q:
+        return ["How do I submit PTO?", "Can unused PTO carry over?", "Where is the HR Portal?"]
+    if "training" in q or "ethics" in q:
+        return ["What happens if I miss training?", "How long do I have to complete it?", "Where do I access training?"]
+    if "tool" in q or "slack" in q or "figma" in q:
+        return ["Who gives me tool access?", "What is Asana used for?", "Who do I contact for IT issues?"]
+    if "1-on-1" in q or "manager" in q:
+        return ["What should I prepare?", "How often are 1-on-1s?", "What should I ask my manager?"]
+    return ["What are my next onboarding steps?", "What trainings are pending?", "Who do I contact for IT help?"]
+
 # -----------------------------
 # Secrets
 # -----------------------------
@@ -184,15 +322,52 @@ if "GROQ_API_KEY" not in st.secrets:
 api_key = st.secrets["GROQ_API_KEY"]
 
 # -----------------------------
+# Session state
+# -----------------------------
+if "selected_question" not in st.session_state:
+    st.session_state.selected_question = ""
+if "last_answer" not in st.session_state:
+    st.session_state.last_answer = ""
+if "last_chunks" not in st.session_state:
+    st.session_state.last_chunks = []
+if "last_followups" not in st.session_state:
+    st.session_state.last_followups = []
+
+# -----------------------------
 # Sidebar
 # -----------------------------
 with st.sidebar:
-    st.header("Logged in as")
-    st.info("Anushka Naidu - Data Science Student - Day 1 of onboarding")
-    st.progress(20, text="Onboarding: 20% complete")
-    st.warning("Still to complete: AI Ethics Training, Tool Onboarding, First Project")
+    st.markdown("""
+    <div class="sidebar-logo">
+        <div class="sidebar-title">🤝 Buddy</div>
+        <div class="sidebar-subtitle">HR Assistant</div>
+    </div>
+
+    <div class="sidebar-card">
+        <div class="sidebar-name">Anushka Naidu</div>
+        <div class="sidebar-meta">Data Science Student · Day 1</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-small-label">Onboarding progress</div>', unsafe_allow_html=True)
+    st.progress(20)
+
+    st.markdown("""
+    <div class="pending-card">
+        <div class="pending-title">Pending tasks</div>
+        <div class="pending-item">• AI Ethics Training</div>
+        <div class="pending-item">• Tool Onboarding</div>
+        <div class="pending-item">• First Project</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.divider()
-    view_mode = st.radio("Switch View:", ["Employee Portal", "HR Manager View"])
+    st.markdown('<div class="sidebar-small-label">View</div>', unsafe_allow_html=True)
+    view_mode = st.radio(
+        "View",
+        ["Employee Portal", "HR Manager View"],
+        label_visibility="collapsed"
+    )
 
 # -----------------------------
 # Manager View
@@ -229,8 +404,18 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
+    # Today's priorities
+    st.markdown("""
+    <div class="task-card">
+        <div class="task-title">Today's priorities</div>
+        <div class="task-line">☐ Complete AI Ethics Training</div>
+        <div class="task-line">☐ Finish Tool Onboarding</div>
+        <div class="task-line">☐ Prepare for first 1-on-1</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if "chunks" not in st.session_state:
-        with st.spinner("Buddy is loading..."):
+        with st.spinner("Buddy is loading the HR handbook..."):
             st.session_state.chunks, st.session_state.embeddings_matrix, st.session_state.embeddings_model = build_vector_db(hr_docs)
 
     starters = [
@@ -243,17 +428,31 @@ else:
     st.caption("Try asking:")
     cols = st.columns(4)
     for i, question in enumerate(starters):
-        if cols[i].button(question, use_container_width=True):
-            st.session_state["selected_question"] = question
+        if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
+            st.session_state.selected_question = question
+
+    # Quick actions
+    st.caption("Quick actions:")
+    action_cols = st.columns(4)
+    for i, action in enumerate(quick_actions):
+        if action_cols[i].button(action, use_container_width=True, key=f"action_{i}"):
+            if action == "Request PTO":
+                st.session_state.selected_question = "How do I request PTO?"
+            elif action == "Contact IT":
+                st.session_state.selected_question = "Who do I contact for IT support?"
+            elif action == "View onboarding checklist":
+                st.session_state.selected_question = "What are my onboarding steps?"
+            else:
+                st.session_state.selected_question = "What should I prepare for my first 1-on-1?"
 
     query = st.text_input(
         "Ask Buddy something:",
-        value=st.session_state.pop("selected_question", ""),
+        value=st.session_state.selected_question,
         placeholder="Example: What trainings do I need to complete?"
     )
 
     if query:
-        with st.spinner("Buddy is thinking..."):
+        with st.spinner("Buddy is reviewing HR documents..."):
             try:
                 top_chunks = query_vector_db(
                     st.session_state.chunks,
@@ -282,12 +481,25 @@ Buddy Response:"""
                 )
 
                 answer = response.choices[0].message.content
-
-                st.markdown("### Buddy says:")
-                st.markdown(f'<div class="response-card">{answer}</div>', unsafe_allow_html=True)
-
-                with st.expander("View source used"):
-                    st.markdown(f'<div class="source-card">{top_chunks[0]}</div>', unsafe_allow_html=True)
+                st.session_state.last_answer = answer
+                st.session_state.last_chunks = top_chunks
+                st.session_state.last_followups = get_followups(query)
 
             except Exception as e:
                 st.error(f"Buddy could not respond right now. Please try again. ({type(e).__name__})")
+
+    if st.session_state.last_answer:
+        st.markdown("### Buddy says:")
+        st.markdown(f'<div class="response-card">{st.session_state.last_answer}</div>', unsafe_allow_html=True)
+
+        with st.expander("View source used"):
+            if st.session_state.last_chunks:
+                st.markdown(f'<div class="source-card">{st.session_state.last_chunks[0]}</div>', unsafe_allow_html=True)
+
+    if st.session_state.last_followups:
+        st.caption("Suggested follow-ups:")
+        follow_cols = st.columns(3)
+        for i, followup in enumerate(st.session_state.last_followups):
+            if follow_cols[i].button(followup, use_container_width=True, key=f"followup_{i}_{followup[:8]}"):
+                st.session_state.selected_question = followup
+                st.rerun()
