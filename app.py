@@ -112,6 +112,12 @@ html, body, [class*="css"] {
     margin-bottom: 0.35rem;
 }
 
+.progress-text {
+    color: #d4d4d8;
+    font-size: 0.82rem;
+    margin-top: 0.35rem;
+}
+
 .pending-card {
     background: rgba(107,161,118,0.13);
     border: 1px solid rgba(107,161,118,0.30);
@@ -160,11 +166,16 @@ p, label, span {
     border: 1px solid rgba(255,255,255,0.09);
     margin-bottom: 1.1rem;
     box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+    backdrop-filter: blur(14px);
+}
+
+.center-hero {
+    text-align: center;
 }
 
 .hero-title {
     color: white;
-    font-size: 2.15rem;
+    font-size: 2.2rem;
     font-weight: 800;
     letter-spacing: -0.03em;
     margin-bottom: 0.45rem;
@@ -188,6 +199,7 @@ p, label, span {
     background: rgba(107,161,118,0.08);
     border: 1px solid rgba(107,161,118,0.18);
     margin-bottom: 1rem;
+    backdrop-filter: blur(14px);
 }
 
 .focus-title {
@@ -198,18 +210,19 @@ p, label, span {
 }
 
 .focus-line {
-    color: #c9cbd1;
-    font-size: 0.86rem;
+    color: #f4f4f5;
+    font-size: 0.88rem;
 }
 
 .response-card {
     background: rgba(255,255,255,0.94);
     color: #111827;
-    padding: 1rem 1.2rem;
+    padding: 0.9rem 1rem;
     border-radius: 16px;
     margin-top: 1.1rem;
-    line-height: 1.6;
+    line-height: 1.55;
     box-shadow: 0 14px 35px rgba(0,0,0,0.22);
+    max-width: 92%;
 }
 
 .source-line {
@@ -272,18 +285,18 @@ def query_vector_db(chunks, matrix, model, query, n_results=3):
 def source_label(query, chunks):
     text = (query + " " + " ".join(chunks)).lower()
     if any(word in text for word in ["pto", "paid time off", "leave"]):
-        return "Employee Handbook · PTO Policy"
+        return "PTO Policy section"
     if any(word in text for word in ["training", "ethics", "harassment", "tool onboarding"]):
-        return "Employee Handbook · Mandatory Training"
+        return "Mandatory Training section"
     if any(word in text for word in ["slack", "asana", "figma", "gemini", "workspace", "tool"]):
-        return "Employee Handbook · Tools"
+        return "Tools section"
     if any(word in text for word in ["it support", "hardware", "access"]):
-        return "Employee Handbook · IT Support"
+        return "IT Support section"
     if any(word in text for word in ["1-on-1", "manager", "friday"]):
-        return "Employee Handbook · 1-on-1s"
+        return "1-on-1s section"
     if any(word in text for word in ["bgv", "background", "verification"]):
-        return "Employee Handbook · Background Verification"
-    return "Employee Handbook · Onboarding Policy"
+        return "Background Verification section"
+    return "Onboarding Policy section"
 
 # -----------------------------
 # Secrets
@@ -322,6 +335,7 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-small-label">Onboarding progress</div>', unsafe_allow_html=True)
     st.progress(20)
+    st.markdown('<div class="progress-text">20% complete</div>', unsafe_allow_html=True)
 
     st.markdown("""
     <div class="pending-card">
@@ -339,10 +353,10 @@ with st.sidebar:
 # Main app
 # -----------------------------
 st.markdown("""
-<div class="hero-card">
-    <div class="hero-title">Your AI workplace assistant</div>
-    <div class="hero-subtitle">Ask about onboarding, HR policies, tools, training, or PTO.</div>
-    <div class="hero-copy">Buddy uses the employee handbook to give quick, grounded answers.</div>
+<div class="hero-card center-hero">
+    <div class="hero-title">🤝 Buddy</div>
+    <div class="hero-subtitle">AI onboarding and HR assistant</div>
+    <div class="hero-copy">Ask about onboarding, HR policies, tools, training, or PTO.</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -369,6 +383,7 @@ cols = st.columns(len(starters))
 for i, question in enumerate(starters):
     if cols[i].button(question, use_container_width=True, key=f"starter_{i}"):
         st.session_state.selected_question = question
+        st.rerun()
 
 query = st.text_input(
     "Ask Buddy",
@@ -388,11 +403,14 @@ if query:
             context = "\n".join(top_chunks)
 
             client = Groq(api_key=api_key)
-            prompt = f"""You are Buddy, a warm HR and onboarding assistant.
+            prompt = f"""You are Buddy, a warm HR and onboarding assistant helping Anushka.
 Use the HR context below to answer accurately.
+Address Anushka by name when it feels natural, but do not overdo greetings.
 Keep the response concise, professional, warm, and direct.
-Avoid overly long supportive language.
-Maximum 3 short paragraphs.
+Maximum 4-6 concise lines.
+Prefer bullet points when helpful.
+Avoid long explanations.
+Do not start every answer with Hello or Hi.
 If you do not know the answer, say so honestly and suggest reaching out to HR.
 
 HR Context:
@@ -417,4 +435,4 @@ if st.session_state.last_answer:
     safe_answer = html.escape(st.session_state.last_answer).replace("\n", "<br>")
     safe_source = html.escape(st.session_state.last_source or "Employee Handbook")
     st.markdown(f'<div class="response-card">{safe_answer}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="source-line">Source: {safe_source}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="source-line">Found in: {safe_source}</div>', unsafe_allow_html=True)
